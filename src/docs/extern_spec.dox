@@ -1,0 +1,14 @@
+/**
+\page extern_spec External specification
+The game displays instructions during the loading and when the game is paused.
+As for the HUD, the picture below explains everything.
+
+\image html help.png "Game screen"
+\image latex help.png "Game screen" width=15cm
+
+\if build_html
+Next: \ref intern_spec
+
+Previous: \ref renderer
+\endif
+**/

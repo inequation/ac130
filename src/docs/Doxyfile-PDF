@@ -1,0 +1,19 @@
+# PDF (LaTeX) AC-130 Doxyfile
+
+# Something in the vein of a preprocessor define to enable rendering
+# of sections meant for the LaTeX build only.
+
+ENABLED_SECTIONS       = build_latex
+
+# If the GENERATE_LATEX tag is set to YES (the default) Doxygen will
+# generate Latex output.
+
+GENERATE_LATEX         = YES
+
+# If the GENERATE_HTML tag is set to YES (the default) Doxygen will
+# generate HTML output.
+
+GENERATE_HTML          = NO
+
+@INCLUDE_PATH          = src/docs
+@INCLUDE               = Doxyfile-common

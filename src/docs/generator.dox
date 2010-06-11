@@ -1,0 +1,164 @@
+/**
+\page generator Content generator
+The generator module was the first one to see the world. It generated terrains
+before they could even be rendered, and then grew and expanded to provide an
+even wider variety of art assets to the game.
+
+\section random Pseudorandom number generator
+The entire module is based upon two main building blocks: the pseudorandom
+number and the Perlin noise generators. The latter will be discussed later on.
+
+First of all, why make my own randomizer? I simply wanted the number sequence to
+be always reproductible, on any and all machines. I wanted the art assets to
+stay constant between program executions. Thus, I created a random number
+generator, which is fed a concrete seed to generate a concrete game world. This
+approach even allows for constant sequences of levels, should I ever get round
+to making the game multi-level.
+
+Why not use the standard C library-provided \c rand() ? Because its formula is
+implementation-dependent, and I want constant behaviour everywhere.
+
+The formula I used in the final version is a simplified variant of one which I
+found on the internet, published by someone claiming it to be equivalent to the
+glibc \c rand() function. This is not true, of course, as it has one major flaw:
+it's just a simple multiplication, albeit on 64 bits, so once the sequence hits
+a zero, it stays that way, because anything times zero is zero. I overcame this
+shortcoming simply by adding 1 (and subtracting it from the return value to
+cancel the addition out). Also, I changed the seed storage type from a signed to
+unsigned integer, which allowed for the removal of 1 comparison and 1 addition
+from the function. These changes do not change the results thanks to the nature
+of binary numbers in the complementary notation.
+
+All random numbers in the generator module are made using this generator instead
+of the one from the C library.
+
+\section perlin Perlin noise
+I needed a way to generate random terrain heightmaps (and other objects, such as
+smoke plums). \b Noise was definitely the way to go; only the most obvious
+solution - to pick a random number in the [0..255] range for every pixel in the
+image - produces a result somewhat remniscent of TV static rather than
+believable topographical data. Something with a more natural appearance was
+needed, so I resorted to the \b Perlin \b noise, as described in Ken Perlin's
+paper, \e Making \e Noise \ref Perlin99 "[0]". Suffice to say it produces nice,
+smooth and natural in appearance noise patterns. The function \c gen_perlin
+returns values in the [-1..1] range.
+
+\section heightmap Terrain heightmap
+The topographical data for the terrain is generated using a technique known as
+\b cloud \b noise. It produces a grayscale image which resembles a fragment of a
+steam cloud, thus the name. If we treat bright pixels as heights and dark ones
+as lows, the veiny, cloudy nature of the image provides for believable, natural-
+looking lay of the land, with landscape features that could be attributed to
+natural geological processes, such as erosion.
+
+Here are the steps that the program performs in order to obtain a terrain
+heightmap (a height value of 1.0 corresponds to a white pixel, while 0.0 - to a
+black one):
+-#	Initialize the entire heightmap buffer to 0.5 (all-gray image).
+-#	Obtain Perlin noise of low frequency, half its values, sum it per-pixel with
+	the heightmap buffer.
+-#	Double the frequency, half the value multiplier, obtain Perlin noise. Sum
+	with the heightmap buffer. Clamp sum result to the [0..1] range.
+-#	Repeat step 3. three more times.
+
+\section proptree The prop tree
+A \b prop in the terminology of this game is a non-geological terrain feature;
+a landmark. There are two kinds of props: trees and buildings. The generation of
+the geometry and imagery is described later on; here I will focus on the big
+picture of the data structure that these elements reside in, and that structure
+is a \b quad \b tree. The props have been organised into it in response to poor
+performance of the original, brute force drawing method.
+
+\subsection propmap Prop map population
+For convenience in planting large numbers of trees and buildings at a single
+algorithm pass, I've divided the terrain into square clusters of width of 2 to
+the \ref PROPMAP_SHIFT power (\f$ 2^4 = 16 \f$ in the final version build). If
+the \ref HEIGHTMAP_SIZE is 1024, then the entire prop map is
+\f$ \frac{1024}{16} * \frac{1024}{16} = 64 * 64 = 4096 \f$ squares. A single
+prop map square corresponds to a single prop tree leaf; more on that later.
+
+The prop map is populated using a recursive random walk algorithm that can be
+described as following (it is run once for every prop type):
+-#	Initialize the prop map to an empty state.
+-#	Generate a reasonable random number less or equal to the number of prop
+	leaves of the current type left to plant. We will call this variable the \b
+	trace.
+-#	Pick a random place in the prop map. Call the random walk routine with the
+	trace passed by reference.
+	-#	If the trace has zero length, return.
+	-#	If this square is empty, mark it as occupied by a cluster of props of
+		the current type.
+	-#	Subtract one from trace.
+	-#	Call the random walk routine recursively for all neighbouring squares
+		with an even probability of \f$ \frac{1}{3} \f$, passing the trace by
+		reference.
+-#	If there are still prop leaves of the current type to be planted, go back to
+	step 2.
+
+This results in irregular, packed clusters of props. Single leaves become
+extremely rare; they usually have neightbours, giving a believable appearance of
+forests and villages.
+
+\subsection proplists Prop lists and the prop tree
+Once the prop map is populated, the lists and the quad tree proper are
+generated.
+
+Every quad tree leaf node of a non-empty type is filled with randomly placed
+props of the given type.
+
+The quad tree root node encompasses the entire terrain, its children are the
+four quarters, etc. The quad tree is then traversed in the renderer to quickly
+frustum cull large amounts of props, and in the game logic to resolve collision
+detection queries.
+
+Each leaf node has a pointer to a tree and a building array. If either of them
+is not \c NULL, the leaf contains an array of the given type of props; a list.
+All of these lists are collectively called the \b prop \b lists and are stored
+in a contiguous memory block.
+
+\subsection figures Figures
+Lastly, I would like to present some facts and figures about the game world.
+The entire \b terrain \b spans \b 1 \b square \b kilometre (1 km wide, 1 km
+long) with a \b height \b amplitude \b of \b 50 \b metres. On this 1 square
+kilometre, we have a large number of props: \b 60% \b of \b the \b surface \b
+area \b is \b covered \b by \b trees (see \ref TREE_COVERAGE), and \b 8% \b by
+\b buildings (see \ref BLDG_COVERAGE). There are \b 25 \b trees (see \ref
+TREES_PER_FIELD) or \b 1 \b building (see \ref BLDGS_PER_FIELD) \b per \b a \b
+prop \b tree \b leaf. This gives us astonishing figures: if the number of prop
+tree leaves is 64 * 64 = 4096, and \f$ 60 \% * 4096 \approx 2457 \f$ of them are
+tree prop leaves, then \b there \b are \b 61425 \b trees and \b 328 \b buildings
+\b in \b the \b game \b world. You have to admit that's at least an order of
+magnitude more than you usually get in video games.
+
+\section geom_and_textures Geometry and imagery
+The generator module also provides geometry and texture data for the renderer.
+I'm not going to explain these algorithms because they mostly utilize extremely
+simple analytical geometry; I'll just mention several guidelines that I've
+followed in the process of their design.
+
+First of all - unit dimensions. Notice that all trees have a base diameter of 1
+and a height of one. This is to enable scaling to actually set the dimensions of
+the props. Same thing goes for buildings, and even smoke plumes.
+
+Secondly, the origin - the geometry for an object is generated in its own object
+space. When it's being rendererd at a point P, all of the object space is
+translated by a vector with the same components as P. This means that the proper
+placement of geometry in relation to the origin - the (0, 0, 0) point - is
+crucial. For example, for the houses and trees, the origin lies in the centre of
+the base, so that it can be translated by a vector consisting of the X and Z
+coordinates and the height of the terrain at that point as the Y component;
+while for the smoke particle, it lies in the very middle of it, so that the
+particle always revolves around the point in the centre.
+
+The algorithms used to create textures are trivial and are best described by
+their code.
+
+\section gen_refs References
+-	\anchor Perlin99 [0] http://www.noisemachine.com/talk1/
+
+\if build_html
+Next: \ref renderer
+
+Previous: \ref game
+\endif
+**/

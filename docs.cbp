@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="AC-130 documentation" />
+		<Option execution_dir="docs/latex" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="HTML">
+				<Option output="docs/" prefix_auto="1" extension_auto="1" />
+				<Option object_output="docs/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+				<ExtraCommands>
+					<Add before="doxygen src/docs/Doxyfile-HTML" />
+				</ExtraCommands>
+			</Target>
+			<Target title="PDF">
+				<Option platforms="Unix;Mac;" />
+				<Option output="docs/" prefix_auto="1" extension_auto="1" />
+				<Option object_output="docs/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+				<ExtraCommands>
+					<Add before="doxygen src/docs/Doxyfile-PDF" />
+					<Add before="cd docs/latex &amp;&amp; make" />
+				</ExtraCommands>
+			</Target>
+			<Target title="All">
+				<Option platforms="Unix;Mac;" />
+				<Option output="docs/" prefix_auto="1" extension_auto="1" />
+				<Option object_output="docs/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+				<ExtraCommands>
+					<Add before="doxygen src/docs/Doxyfile-HTML" />
+					<Add before="doxygen src/docs/Doxyfile-PDF" />
+					<Add before="cd docs/latex &amp;&amp; make" />
+				</ExtraCommands>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+		</Compiler>
+		<Unit filename="src/ac130.h" />
+		<Unit filename="src/ac_math.h" />
+		<Unit filename="src/docs/Doxyfile" />
+		<Unit filename="src/docs/Doxyfile-HTML" />
+		<Unit filename="src/docs/Doxyfile-PDF" />
+		<Unit filename="src/docs/Doxyfile-common" />
+		<Unit filename="src/docs/ac130.dox" />
+		<Unit filename="src/docs/arch.dox" />
+		<Unit filename="src/docs/conclusions.dox" />
+		<Unit filename="src/docs/extern_spec.dox" />
+		<Unit filename="src/docs/game.dox" />
+		<Unit filename="src/docs/generator.dox" />
+		<Unit filename="src/docs/intern_spec.dox" />
+		<Unit filename="src/docs/intro.dox" />
+		<Unit filename="src/docs/renderer.dox" />
+		<Unit filename="src/docs/testing.dox" />
+		<Unit filename="src/renderer/r_local.h" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<lib_finder disable_auto="1" />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

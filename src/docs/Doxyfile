@@ -1,0 +1,4 @@
+# Default AC-130 Doxyfile - by default generate HTML only
+
+@INCLUDE_PATH          = src/docs
+@INCLUDE               = Doxyfile-HTML

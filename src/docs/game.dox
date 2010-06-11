@@ -1,0 +1,31 @@
+/**
+\page game Game logic
+\section Gameplay
+While the idea for an AC-130 game and how it could technically be made was all
+fun and simple, it wasn't nearly as easy to come up with what the actual object
+of the game might be. In fact, it was pretty challenging. Obviously, it had to
+involve destruction; however, with limited art assets, robustness of the game
+environment and engine capabilities, I had limited possibilities. I finally
+settled for an old-school arcade shooter where the player races against time to
+achieve the highest possible score by killing enemy soldiers.
+
+\subsection scoring Scoring
+The backstory of the game talks about supporting friendly troops in a ground
+war. This is precisely what happens: we have soldiers on two opposing factions,
+roaming around the terrain in a more or less organised way, who will engage each
+other in small arms fire when in sight and range. It's the player's job to tell
+the difference between friends and foes - the former are marked with a flashing
+IR strobe - and help in, or even relieve the friendlies from the task of
+eliminating the opposition.
+
+Every soldier initially has a specific amount of health - 100 units. The player
+receives 1 point per each 10 units of damage successfully dealt to enemy forces,
+and -1 point per each damage unit dealt to friendlies, plus a -50 "bonus" per
+every friendly fatal casualty. As you can see, it pays to watch your fire.
+
+\if build_html
+Next: \ref generator
+
+Previous: \ref arch
+\endif
+**/

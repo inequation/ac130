@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="AC-130 game" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Unix Debug">
+				<Option platforms="Unix;Mac;" />
+				<Option output="bin/Debug/ac130" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Option parameters="-w" />
+				<Compiler>
+					<Add option="-Wshadow" />
+					<Add option="-Winit-self" />
+					<Add option="-Wredundant-decls" />
+					<Add option="-Wcast-align" />
+					<Add option="-Wundef" />
+					<Add option="-Winline" />
+					<Add option="-Wunreachable-code" />
+					<Add option="-Wextra" />
+					<Add option="-Wall" />
+					<Add option="-pg" />
+					<Add option="-g" />
+				</Compiler>
+				<Linker>
+					<Add option="-pg" />
+					<Add library="GLEW" />
+					<Add library="GL" />
+					<Add library="SDL" />
+				</Linker>
+			</Target>
+			<Target title="Unix Release">
+				<Option platforms="Unix;Mac;" />
+				<Option output="bin/Release/ac130" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="0" />
+				<Option compiler="gcc" />
+				<Option parameters="-r 1280x1024" />
+				<Compiler>
+					<Add option="-march=athlon-4" />
+					<Add option="-march=pentium3" />
+					<Add option="-fomit-frame-pointer" />
+					<Add option="-O2" />
+					<Add option="-DNDEBUG" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add library="GLEW" />
+					<Add library="GL" />
+					<Add library="SDL" />
+				</Linker>
+			</Target>
+			<Target title="Win32 Debug">
+				<Option platforms="Windows;Unix;" />
+				<Option output="bin/Debug/ac130.exe" prefix_auto="1" extension_auto="0" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="mingw_crosscompilation" />
+				<Option parameters="-w" />
+				<Compiler>
+					<Add option="-Wshadow" />
+					<Add option="-Winit-self" />
+					<Add option="-Wredundant-decls" />
+					<Add option="-Wcast-align" />
+					<Add option="-Winline" />
+					<Add option="-Wunreachable-code" />
+					<Add option="-Wextra" />
+					<Add option="-Wall" />
+					<Add option="-pg" />
+					<Add option="-g" />
+				</Compiler>
+				<Linker>
+					<Add option="-pg" />
+					<Add library="mingw32" />
+					<Add library="glew32s" />
+					<Add library="SDLmain" />
+					<Add library="SDL.dll" />
+					<Add library="opengl32" />
+				</Linker>
+			</Target>
+			<Target title="Win32 Release">
+				<Option platforms="Windows;Unix;" />
+				<Option output="bin/Release/ac130.exe" prefix_auto="1" extension_auto="0" />
+				<Option object_output="obj/Release/" />
+				<Option type="0" />
+				<Option compiler="mingw_crosscompilation" />
+				<Option parameters="-r 1280x1024" />
+				<Compiler>
+					<Add option="-march=athlon-4" />
+					<Add option="-march=pentium3" />
+					<Add option="-fomit-frame-pointer" />
+					<Add option="-O2" />
+					<Add option="-DNDEBUG" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add library="mingw32" />
+					<Add library="glew32s" />
+					<Add library="SDLmain" />
+					<Add library="SDL.dll" />
+					<Add library="opengl32" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-msse" />
+			<Add option="-msse2" />
+		</Compiler>
+		<Unit filename="src/ac130.h" />
+		<Unit filename="src/ac_math.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/ac_math.h" />
+		<Unit filename="src/font.h" />
+		<Unit filename="src/footmobile.h" />
+		<Unit filename="src/game/g_collision.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/game/g_local.h" />
+		<Unit filename="src/game/g_main.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/generator.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/main.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/renderer/r_2D.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/renderer/r_footmobile.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/renderer/r_fx.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/renderer/r_local.h" />
+		<Unit filename="src/renderer/r_main.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/renderer/r_props.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/renderer/r_shaders.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/renderer/r_terrain.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/shaders/compositor_fs.glsl">
+			<Option target="Unix Debug" />
+			<Option target="Unix Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="src/shaders/compositor_vs.glsl">
+			<Option target="Unix Debug" />
+			<Option target="Unix Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="src/shaders/font_fs.glsl" />
+		<Unit filename="src/shaders/footmobile_vs.glsl" />
+		<Unit filename="src/shaders/prop_fs.glsl" />
+		<Unit filename="src/shaders/prop_vs.glsl" />
+		<Unit filename="src/shaders/sprite_fs.glsl" />
+		<Unit filename="src/shaders/sprite_vs.glsl" />
+		<Unit filename="src/shaders/terrain_fs.glsl" />
+		<Unit filename="src/shaders/terrain_vs.glsl" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<lib_finder disable_auto="1" />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

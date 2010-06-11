@@ -1,0 +1,131 @@
+/**
+\page renderer Renderer
+The 3D renderer at over 1000 lines of code is the largest module of the program.
+Through a simple API it provides an abstraction layer for the game logic to
+visualize the game world. The architecture of the renderer is always dictated by
+the kind of environment it's supposed to display. In this case, it has to be
+optimized for large, open terrain ones.
+
+I would just like to emphasize that quad trees are used extensively in this
+game's engine, and the reason for that is the fact that the terrain can be
+roughly approximated as a large, flat square surface, which makes it a perfect
+candidate for being put into this kind of a data structure.
+
+\section Terrain
+A working terrain display was the first milestone of the project, upon the
+reaching of which I already knew the game was going to work - it just looked too
+cool.
+
+For the terrain rendering I used a method of \e GPU \e terrain \e rendering, as
+described by Harald Vistnes in his paper \ref Vistnes07 "[0]". The paritcular
+flavour powering the final version of the game is actually the fifth incarnation
+of the algorithm that I've developed - the first one being just a port of the
+original solution from Direct3D to OpenGL; then, a down-graded version that
+brought some of the calculations back from the GPU to the CPU for increased
+hardware compatibility, and then two more iterations, off-loading more and more
+of the operations to the GPU again, while keeping the shaders old
+hardware-friendly.
+
+The only actual difference between the final iteration of this terrain engine
+and Vistnes's original solution is that while the latter used Vertex Texture
+Fetch (a feature found in more recent GPUs - at least Shader Model
+3.0-compliant; it wasn't, however, until the advent of SM 4.0 and unified shader
+processors that its performance became feasible for large-scale VTF usage, such
+as terrain rendering, therefore the method in its original form wasn't
+suitable for this project) to sample the heightmap in the vertex shader, AC-130
+performs the sampling on the CPU and uploads the results as an array of uniform
+shader variables, thus extending the supported hardware base. Other than that,
+the algorithms are pretty much conceptually identical.
+
+\section frustumculling Frustum culling
+For frustum culling I used an optimized, fast frustum culling algorithm, as
+described by Ulf Assarsson and Tomas M&ouml;ller in their paper, \e Optimized
+\e View \e Frustum \e Culling \e Algorithms \e for \e Bounding \e Boxes \ref
+AssarssonMoeller99 "[1]".
+
+\section proprendering Prop rendering
+
+\subsection treetraversal Prop tree traversal
+The prop rendering algorithm is once again based on quad trees. It works
+similarly to the terrain engine; however, the subdivision mechanism is slightly
+different. First of all, the prop renderer does not take distance from the
+camera into account when traversing the tree - instead, it performs frustum
+culling of the node's AABB (axis-aligned bounding box) only.
+
+-	If the entire AABB is outside the view frustum, it is discarded, along with
+	all of its children, as out of view.
+-	If the entire AABB is inside the view frustum, all of its children are
+	drawn.
+-	If the AABB intersects with the view frustum, then:
+	-	if the current node is a leaf, it is drawn;
+	-	else, the algorithm is run recursively on all of the node's children.
+
+When drawing a tree prop leaf, the algorithm also chooses the tree level of
+detail (e.g. the complexity level of geometry) based on the leaf's distance from
+camera.
+
+\subsection indiv_props Drawing individual props
+Once the tree traversal reaches the leaf level, props in every leaf are drawn
+sequentially using the pseudo-instancing technique, as described in the \e GLSL
+\e Pseudo-Instancing paper by Jeremy Zelsnack \ref Zelsnack04 "[2]". The switch
+to this method from the previously used matrix stack provided a great
+performance boost, speeding the game up by about 50 frames per second on my
+machine.
+
+\section particles Particles
+Smoke particles are drawn using an extremely simple technique: a unit square is
+rendered with a model view matrix with the rotation part cleared to identity.
+This makes the particles always face the camera. Also, depth buffer writing is
+disabled during the particle rendering stage in order to address depth buffer
+precision problems, resulting in ugly artifacts at the edges of the particles
+and flickering.
+
+\section compositing Compositing
+A compositor has been implemented to create some of the thermal vision and CRT
+display stylization effects.
+
+\subsection inertia Infrared vision inertia
+Real-world infrared systems are characterized by a sort of an inertia - when the
+camera is moved quickly, things appear to leave "traces" on the screen. In order
+to simulate this effect in the game, I needed some source imagery - meaning a
+collection of a few past frames. They are handled using a simple FIFO queue. In
+it there are several frame buffer objects. The renderer draws into the currently
+selected FBO, and every 50 milliseconds, the queue is advanced, and the
+destination buffer is switched. When drawing the final image to screen, the
+previous frames are summed per-pixel with the current one, chronologically with
+a decreasing weight, to create the thermal vision inertia effect.
+
+\subsection hdr Fake HDR
+An explosion of the large caliber weapon - the M102 105mm howitzer - emits much
+more energy (heat) than the other, smaller caliber weapons. In reality, this has
+the effect of dimming all the other heat sources in the view of a camera. It
+could be simulated with HDR (high dynamic range) rendering; however, I couldn't
+justify the amount of effort that would need to go into developing a HDRR system
+and decided to fake the effect with a cheap, simple contrast enhancement
+instead.
+
+\subsection overlay White hot/black hot and HUD overlay
+The last step done before laying the 2D HUD over the 3D image is simulation of
+one last feature of most real-life infrared vision systems. They provide an
+option of inverting the values of the display. The resulting modes are called
+"white hot" and "black hot"; I think the names are pretty self-explanatory.
+
+Finally, the HUD is composited on top of that with a bit of a horizontal blur to
+simulate the smudging of a worn out CRT display. Please note that the
+convolution kernel is asymetric - it only reads one row of pixels, and only to
+the left of the base pixel, resulting in a smudge that is biased to the right.
+
+\section r_refs References
+-	\anchor Vistnes07 [0]
+	http://www.cs.montana.edu/courses/525/presentations/Mike2.pdf
+-	\anchor AssarssonMoeller99 [1]
+	http://zach.in.tu-clausthal.de/teaching/cg_literatur/vfc_bbox.pdf
+-	\anchor Zelsnack04 [2]
+	http://developer.download.nvidia.com/SDK/9.5/Samples/DEMOS/OpenGL/src/glsl_pseudo_instancing/docs/glsl_pseudo_instancing.pdf
+
+\if build_html
+Next: \ref extern_spec
+
+Previous: \ref generator
+\endif
+**/

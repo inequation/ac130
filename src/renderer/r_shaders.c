@@ -5,9 +5,12 @@
 
 #include "r_local.h"
 
+// helper define for terrain vertex shader
+#define TERRAIN_HS_VECS	(TERRAIN_PATCH_SIZE * TERRAIN_PATCH_SIZE + 3) / 4
+
 // embed shader sources
 #define STRINGIFY(A)  		#A
-#define SHADER_DEFINE(A)	"define " #A " " STRINGIFY(A) "\n"
+#define SHADER_DEFINE(A)	"#define " #A " " STRINGIFY(A) "\n"
 #include "../shaders/terrain_vs.glsl"
 #include "../shaders/terrain_fs.glsl"
 #include "../shaders/prop_vs.glsl"

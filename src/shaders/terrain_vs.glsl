@@ -1,14 +1,12 @@
-static const char TERRAIN_VS[] = STRINGIFY(
+static const char TERRAIN_VS[] = SHADER_DEFINE(TERRAIN_HS_VECS) STRINGIFY(
 // properties constant over the entire terrain: x - heightmap size,
 // y - height scale
 uniform vec2 constParams;
 // patch-specific properties: xy - uv bias, z - scale
 uniform vec3 patchParams;
 
-// the size of the MUST match TERRAIN_PATCH_SIZE * TERRAIN_PATCH_SIZE in
-// r_terrain.c!!!
 // we're using vec4 because not all hardware will align this correctly
-uniform vec4 heightSamples[73];	// ceil(17 * 17 / 4)
+uniform vec4 heightSamples[TERRAIN_HS_VECS];
 
 varying float fogFactor;
 varying float height;

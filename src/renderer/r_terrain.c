@@ -5,8 +5,6 @@
 
 #include "r_local.h"
 
-#define TERRAIN_PATCH_SIZE			17
-#define TERRAIN_PATCH_SIZE_F		17.f
 #define TERRAIN_NUM_VERTS			(										\
 										TERRAIN_PATCH_SIZE					\
 										* TERRAIN_PATCH_SIZE				\

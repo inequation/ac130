@@ -36,6 +36,11 @@ typedef enum {
 /// Always valid index of the FBO for 2D drawing.
 #define FBO_2D		0
 
+/// Single terrain patch side length.
+#define TERRAIN_PATCH_SIZE			17
+/// Floating point constant version of \a TERRAIN_PATCH_SIZE.
+#define TERRAIN_PATCH_SIZE_F		17.f
+
 // main module
 /// Performs frustum culling on the given AABB (axis-aligned bounding box).
 /// \return			see \ref cullResult_t

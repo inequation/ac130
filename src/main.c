@@ -11,6 +11,10 @@ int m_screen_width = 1024;
 int m_screen_height = 768;
 bool m_full_screen = true;
 
+float m_terrain_LOD = 40.f;
+bool m_FSAA = true;
+bool m_compatshader = false;
+
 static void parse_args(int argc, char *argv[]) {
 	int i;
 
@@ -48,6 +52,20 @@ static void parse_args(int argc, char *argv[]) {
 				else
 					m_screen_height = 0.75 * m_screen_width;
 			}
+		}
+		if (!strcmp(argv[i], "-noaa")) {
+			m_FSAA = false;
+			continue;
+		}
+		if (!strcmp(argv[i], "-c")) {
+			m_compatshader = true;
+			continue;
+		}
+		if (!strcmp(argv[i], "-t") && i + 1 < argc) {
+			m_terrain_LOD = atof(argv[++i]);
+			if (m_terrain_LOD < 1.f)
+				m_terrain_LOD = 1.f;
+			continue;
 		}
 	}
 }

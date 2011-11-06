@@ -72,6 +72,7 @@ typedef struct {
 typedef struct {
 	ac_vec4_t	pos;		///< vertex position
 	float		st[2];		///< texture coordinates
+	int			index;		///< geometry instance index
 } ac_vertex_t;
 
 /// Footmobile (ground troop) stance enumeration.
@@ -102,6 +103,13 @@ extern int m_screen_width;
 extern int m_screen_height;
 /// whether the game is running in full screen mode or not
 extern bool m_full_screen;
+
+/// terrain level of detail setting (adjustable by -t <LOD> commandline option)
+extern float m_terrain_LOD;
+/// whether full-screen anti-aliasing is enabled (defaults to true, -noaa commandline option to disable)
+extern bool m_FSAA;
+/// whether compatbilitiy mode shaders are enabled (defaults to false, -c commandline option to enable)
+extern bool m_compatshader;
 
 /// @}
 
@@ -148,6 +156,9 @@ extern bool m_full_screen;
 #define TREES_PER_FIELD		25
 /// \brief number of buildings to plant per prop map square
 #define BLDGS_PER_FIELD		1
+/// \brief maximum number of props (either trees or buildings) per prop map square
+#define PROPS_PER_FIELD		(TREES_PER_FIELD > BLDGS_PER_FIELD				\
+								? TREES_PER_FIELD : BLDGS_PER_FIELD)
 
 /// \brief maximum number of trees in the entire game world
 #define MAX_NUM_TREES		(TREES_PER_FIELD								\

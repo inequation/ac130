@@ -5,6 +5,7 @@
 
 #include "ac130.h"
 #include <assert.h>
+#include <stdio.h>
 
 // make sure we don't use the libc rand() in this file!
 #define rand()	assert(!"Are you kidding me?!")
@@ -136,10 +137,43 @@ static void gen_cloudmap(char *dst, size_t size) {
 		free(submaps[x]);
 }
 
+/// Attempts to load a cached copy of the height map from disk, if available.
+static bool gen_load_terrain_cache(int seed) {
+	FILE *f;
+	char fname[16];
+	size_t r;
+
+	snprintf(fname, sizeof(fname), "%X.act", *((uint *)&seed));
+	f = fopen(fname, "rb");
+
+	if (!f)
+		return false;
+	r = fread(gen_heightmap, HEIGHTMAP_SIZE, HEIGHTMAP_SIZE, f);
+	fclose(f);
+	return r == HEIGHTMAP_SIZE;
+}
+
+/// Saves a generated height map to a disk cache for future reuse.
+static void gen_save_terrain_cache(int seed) {
+	FILE *f;
+	char fname[16];
+
+	snprintf(fname, sizeof(fname), "%X.act", *((uint *)&seed));
+	f = fopen(fname, "wb");
+
+	if (!f)
+		return;
+	fwrite(gen_heightmap, HEIGHTMAP_SIZE, HEIGHTMAP_SIZE, f);
+	fclose(f);
+}
+
 void gen_terrain(int seed) {
 	int x, y, xoff, yoff, pix;
 	char *cloudmap = malloc(sizeof(gen_heightmap));
 	float freq;
+
+	if (gen_load_terrain_cache(seed))
+		return;
 
 	// HACK: this xor is a litle manipulation to keep a pre-bugfix landscape for
 	// a particular random seed (the seed used to be initialized after the
@@ -188,6 +222,9 @@ void gen_terrain(int seed) {
 	}
 
 	free(cloudmap);
+
+	// since we've successfully generated a height map, dump it into a cache
+	gen_save_terrain_cache(seed);
 }
 
 static float gen_sample_height(float x, float y) {

@@ -6,7 +6,8 @@
 #include "r_local.h"
 
 // embed shader sources
-#define STRINGIFY(A)  #A
+#define STRINGIFY(A)  		#A
+#define SHADER_DEFINE(A)	"define " #A " " STRINGIFY(A) "\n"
 #include "../shaders/terrain_vs.glsl"
 #include "../shaders/terrain_fs.glsl"
 #include "../shaders/prop_vs.glsl"
@@ -17,6 +18,7 @@
 #include "../shaders/font_fs.glsl"
 #include "../shaders/compositor_vs.glsl"
 #include "../shaders/compositor_fs.glsl"
+#include "../shaders/compositor_compat_fs.glsl"
 
 uint		r_ter_prog = 0;
 uint		r_ter_vs = 0;
@@ -110,7 +112,8 @@ bool r_create_shaders(void) {
 		&r_ter_vs, &r_ter_fs, &r_ter_prog))
 		return false;
 	// create the compositor GPU program
-	if (!r_create_program("Compositor", COMPOSITOR_VS, COMPOSITOR_FS,
+	if (!r_create_program("Compositor", COMPOSITOR_VS,
+		(m_compatshader ? COMPOSITOR_COMPAT_FS : COMPOSITOR_FS),
 		&r_comp_vs, &r_comp_fs, &r_comp_prog))
 		return false;
 	// create the font GPU program

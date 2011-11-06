@@ -51,9 +51,7 @@ void r_create_props(void) {
 }
 
 static void r_recurse_proptree_drawall(ac_prop_t *node) {
-	if (!node)
-		return;
-	if (node->trees != NULL) {
+	if (node->trees) {
 		int i;
 		float d2;
 		ac_tree_t *t;
@@ -85,7 +83,7 @@ static void r_recurse_proptree_drawall(ac_prop_t *node) {
 			*r_tri_counter += num - 2;
 		}
 		return;
-	} else if (node->bldgs != NULL) {
+	} else if (node->bldgs) {
 		int i;
 		ac_bldg_t *b;
 		for (b = node->bldgs, i = 0; i < BLDGS_PER_FIELD; i++, b++) {
@@ -108,30 +106,37 @@ static void r_recurse_proptree_drawall(ac_prop_t *node) {
 		}
 		return;
 	}
-	r_recurse_proptree_drawall(node->child[0]);
-	r_recurse_proptree_drawall(node->child[1]);
-	r_recurse_proptree_drawall(node->child[2]);
-	r_recurse_proptree_drawall(node->child[3]);
+	if (node->child[0])
+		r_recurse_proptree_drawall(node->child[0]);
+	if (node->child[1])
+		r_recurse_proptree_drawall(node->child[1]);
+	if (node->child[2])
+		r_recurse_proptree_drawall(node->child[2]);
+	if (node->child[3])
+		r_recurse_proptree_drawall(node->child[3]);
 }
 
 static void r_recurse_proptree(ac_prop_t *node, int step) {
-	if (!node)
-		return;
 	switch (r_cull_bbox(node->bounds)) {
 		case CR_OUTSIDE:
 			return;
 		case CR_INSIDE:
-			r_recurse_proptree_drawall(node);
+			if (node)
+				r_recurse_proptree_drawall(node);
 			break;
 		case CR_INTERSECT:
-			if ((step >>= 1) < 2) {
+			if ((step >>= 1) < 2 && node) {
 				r_recurse_proptree_drawall(node);
 				return;
 			}
-			r_recurse_proptree(node->child[0], step);
-			r_recurse_proptree(node->child[1], step);
-			r_recurse_proptree(node->child[2], step);
-			r_recurse_proptree(node->child[3], step);
+			if (node->child[0])
+				r_recurse_proptree(node->child[0], step);
+			if (node->child[1])
+				r_recurse_proptree(node->child[1], step);
+			if (node->child[2])
+				r_recurse_proptree(node->child[2], step);
+			if (node->child[3])
+				r_recurse_proptree(node->child[3], step);
 			break;
 	}
 }

@@ -24,7 +24,6 @@
 									)	// + 2 degenerate triangles
 #define TERRAIN_NUM_INDICES			(TERRAIN_NUM_BODY_INDICES				\
 										+ TERRAIN_NUM_SKIRT_INDICES)
-#define TERRAIN_LOD					40.f
 
 // uncomment to enable uniform-based height transfers instead of VBO
 // retransmissions
@@ -257,7 +256,7 @@ static void r_terrain_patch(float bu, float bv, float scale) {
 		}
 	}
 	glUnmapBufferARB(GL_ARRAY_BUFFER_ARB);
-#else
+#else // MAP_VBO
 	v = r_ter_verts;
 	for (i = 0; i < TERRAIN_PATCH_SIZE; i++) {
 		for (j = 0; j < TERRAIN_PATCH_SIZE; j++, v++) {
@@ -318,7 +317,7 @@ static void r_recurse_terrain(float minU, float minV,
 	// use distances squared
 	float f2 = ac_vec_dot(v, v) / d2;
 
-	if (f2 > TERRAIN_LOD * TERRAIN_LOD || level < 1)
+	if (f2 > m_terrain_LOD || level < 1)
 		r_terrain_patch(minU, minV, scale);
 	else {
 		scale *= 0.5;

@@ -12,7 +12,7 @@
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="-w" />
+				<Option parameters="-w -r 640x480 -noaa -c -t 5" />
 				<Compiler>
 					<Add option="-Wshadow" />
 					<Add option="-Winit-self" />
@@ -153,6 +153,7 @@
 		<Unit filename="src/renderer/r_terrain.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="src/shaders/compositor_compat_fs.glsl" />
 		<Unit filename="src/shaders/compositor_fs.glsl">
 			<Option target="Unix Debug" />
 			<Option target="Unix Release" />

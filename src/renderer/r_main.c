@@ -211,8 +211,13 @@ bool r_init(uint *vcounter, uint *tcounter,
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 0);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
+	if (m_FSAA) {
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
+	}
+
+	// we need this parameter to be squared anyway
+	m_terrain_LOD *= m_terrain_LOD;
 
 	if (!(r_screen = SDL_SetVideoMode(m_screen_width, m_screen_height,
 		24, SDL_OPENGL | (m_full_screen ? SDL_FULLSCREEN : 0)))) {

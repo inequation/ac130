@@ -7,8 +7,10 @@
 
 #define MAX_PROJECTILES		512
 projectile_t	g_projs[MAX_PROJECTILES];
+size_t			g_nprojs = 0;
 #define MAX_PARTICLES		1024
 particle_t		g_particles[MAX_PARTICLES];
+size_t			g_nparticles = 0;
 
 int				g_num_trees;
 ac_tree_t		*g_trees;
@@ -70,21 +72,24 @@ void g_shutdown(void) {
 
 float g_sample_height(float x, float y) {
 	// bilinear filtering
-	float xi, yi, xfrac, yfrac;
+	float fxi, fyi, xfrac, yfrac;
 	float fR1, fR2;
+	int xi, yi;
 
-	xfrac = modff(x, &xi);
-	yfrac = modff(y, &yi);
+	xfrac = modff(x, &fxi);
+	yfrac = modff(y, &fyi);
+	xi = fxi;
+	yi = fyi;
 
 	if (yi < 0.f || xi < 0.f
 		|| yi + 1 >= HEIGHTMAP_SIZE || xi + 1 >= HEIGHTMAP_SIZE)
 		return 0.f;
 
 	// bilinear filtering
-	fR1 = (1.f - xfrac) * gen_heightmap[(int)yi * HEIGHTMAP_SIZE + (int)xi]
-		+ xfrac * gen_heightmap[(int)yi * HEIGHTMAP_SIZE + (int)xi + 1];
-	fR2 = (1.f - xfrac) * gen_heightmap[((int)yi + 1) * HEIGHTMAP_SIZE +(int)xi]
-		+ xfrac * gen_heightmap[((int)yi + 1) * HEIGHTMAP_SIZE + (int)xi + 1];
+	fR1 = (1.f - xfrac) * gen_heightmap[yi * HEIGHTMAP_SIZE + xi]
+		+ xfrac * gen_heightmap[yi * HEIGHTMAP_SIZE + xi + 1];
+	fR2 = (1.f - xfrac) * gen_heightmap[(yi + 1) * HEIGHTMAP_SIZE + xi]
+		+ xfrac * gen_heightmap[(yi + 1) * HEIGHTMAP_SIZE + xi + 1];
 	return ((1.f - yfrac) * fR1 + yfrac * fR2) * HEIGHT_SCALE;
 }
 
@@ -332,57 +337,60 @@ void g_explode(ac_vec4_t pos, weap_t w) {
 }
 
 void g_advance_projectiles(void) {
-	size_t i;
+	size_t cnt;
+	projectile_t *p;
 	ac_vec4_t grav = ac_vec_mul(g_gravity, g_frameTimeVec);
 	ac_vec4_t npos, ip;
 	ac_vec4_t ofs = ac_vec_set(HEIGHTMAP_SIZE / 2, 0, HEIGHTMAP_SIZE / 2, 0);
 	float h;
 
-	for (i = 0; i < sizeof(g_projs) / sizeof(g_projs[0]); i++) {
-		if (g_projs[i].weap == WP_NONE)
+	for (p = g_projs, cnt = 0;
+		p < g_projs + sizeof(g_projs) / sizeof(g_projs[0]) && cnt < g_nprojs;
+		p++) {
+		if (p->weap == WP_NONE)
 			continue;
+		// keep track of the number of projectiles we've stepped - if we've
+		// advanced all that there are, there's no point in iterating further
+		cnt++;
 		// find the new position
-		npos = ac_vec_mul(g_projs[i].vel, g_frameTimeVec);
-		npos = ac_vec_add(g_projs[i].pos, npos);
+		npos = ac_vec_mul(p->vel, g_frameTimeVec);
+		npos = ac_vec_add(p->pos, npos);
 		npos = ac_vec_add(ofs, npos);
 		// see if we haven't gone off the map
 		if (npos.f[0] < 0 || npos.f[2] < 0
 			|| npos.f[0] > HEIGHTMAP_SIZE - 1
 			|| npos.f[2] > HEIGHTMAP_SIZE - 1) {
 			//printf("OUT! %d\n", (int)g_projs[i].weap);
-			g_projs[i].weap = WP_NONE;
+			p->weap = WP_NONE;
+			g_nprojs--;
 			continue;
 		}
 		// terrain collision detection
 		h = g_sample_height(npos.f[0], npos.f[2]);
 		if (npos.f[1] < h) {
 			// find the impact point
-			ip = g_collide(ac_vec_add(ofs, g_projs[i].pos), npos);
+			ip = g_collide(ac_vec_add(ofs, p->pos), npos);
 			//printf("HIT! %f %f %f\n", ip.f[0], ip.f[1], ip.f[2]);
-			g_explode(ac_vec_sub(ip, ofs), g_projs[i].weap);
-			g_projs[i].weap = WP_NONE;
+			g_explode(ac_vec_sub(ip, ofs), p->weap);
+			p->weap = WP_NONE;
 		}
-		g_projs[i].pos = ac_vec_sub(npos, ofs);
+		p->pos = ac_vec_sub(npos, ofs);
 		// draw tracers
-		switch (g_projs[i].weap) {
+		switch (p->weap) {
 			case WP_M61_TRACER:
-				r_draw_tracer(g_projs[i].pos,
-					ac_vec_normalize(g_projs[i].vel), 3.f);
+				r_draw_tracer(p->pos, ac_vec_normalize(p->vel), 3.f);
 			case WP_M61:	// intentional fall-through!
 				// add full gravity
-				g_projs[i].vel = ac_vec_add(g_projs[i].vel, grav);
+				p->vel = ac_vec_add(p->vel, grav);
 				break;
 			case WP_L60:
-				r_draw_tracer(g_projs[i].pos,
-					ac_vec_normalize(g_projs[i].vel), 5.f);
+				r_draw_tracer(p->pos, ac_vec_normalize(p->vel), 5.f);
 				// add reduced gravity
-				g_projs[i].vel = ac_vec_add(g_projs[i].vel,
-					ac_vec_mulf(grav, 0.5));
+				p->vel = ac_vec_add(p->vel, ac_vec_mulf(grav, 0.5));
 				break;
 			case WP_M102:
 				// add reduced gravity
-				g_projs[i].vel = ac_vec_add(g_projs[i].vel,
-					ac_vec_mulf(grav, 0.3));
+				p->vel = ac_vec_add(p->vel, ac_vec_mulf(grav, 0.3));
 				break;
 			default:	// shut up compiler
 				break;
@@ -397,6 +405,7 @@ void g_fire_weapon(weap_t w) {
 	// find a free projectile slot
 	for (i = 0; i < sizeof(g_projs) / sizeof(g_projs[0]); i++) {
 		if (g_projs[i].weap == WP_NONE) {
+			++g_nprojs;
 			g_projs[i].weap = w;
 			g_projs[i].pos = g_viewpoint.origin;
 			//g_projs[i].pos.f[1] += 0.5;
@@ -820,23 +829,22 @@ void g_frame(int ticks, float frameTime, ac_input_t *input) {
 
 	// advance the non-player elements of the world
 	// draw a test footmobile
-	static ac_footmobile_t fmb;
+	/*static ac_footmobile_t fmb;
 	float xpos = 20.f * sinf(g_time * 0.13);
 	fmb.pos = ac_vec_set(xpos, g_sample_height(512 + xpos, 512), 0, 0);
 	fmb.ang = g_time * 0.5;
 	fmb.stance = STANCE_STAND;
 	r_start_footmobiles();
 	r_draw_squad(&fmb, 1);
-	r_finish_footmobiles();
+	r_finish_footmobiles();*/
 	g_advance_projectiles();
 	r_start_fx();
 	g_advance_particles();
 	r_finish_fx();
 
 	r_finish_3D();
-	if (!g_paused)
-		g_drawHUD(neg);
-	else {
+
+	if (g_paused) {
 		g_draw_instructions();
 		if (gameTicks == 0) {
 			r_draw_string("PRESS FIRE TO START", 0.125, 0.87,
@@ -845,7 +853,8 @@ void g_frame(int ticks, float frameTime, ac_input_t *input) {
 				g_paused = false;
 		} else
 			r_draw_string("GAME PAUSED", 0.27, 0.87, 1.0);
-	}
+	} else
+		g_drawHUD(neg);
 	r_finish_2D();
 
 	r_composite(neg, expld);

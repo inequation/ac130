@@ -11,6 +11,8 @@ static inline float g_trace_through_AABB(ac_vec4_t p1, ac_vec4_t p2,
 	float enterFrac = -1.f, leaveFrac = 1.f;
 	bool startOut = false;
 	int i;
+	if (!bounds)
+		return 1.f;
 	for (i = 0; i < 6; i++) {
 		if (i < 3) {
 			d1 = -p1.f[i] + bounds[0].f[i];
@@ -95,7 +97,7 @@ static float g_collide_bldgs(ac_vec4_t p1, ac_vec4_t p2, ac_prop_t *node,
 	int i;
 	float frac;
 	frac = g_trace_through_AABB(p1, p2, node->bounds);
-	if (node->bldgs) {
+	if (node && node->bldgs) {
 		for (i = 0; i < BLDGS_PER_FIELD; i++) {
 			if ((frac = g_trace_through_bldg(p1, p2, node->bldgs + i))
 				< curFrac) {
@@ -107,6 +109,8 @@ static float g_collide_bldgs(ac_vec4_t p1, ac_vec4_t p2, ac_prop_t *node,
 		// if we haven't hit our AABB or we hit it further than the closest hit
 		// so far, we can't have anything of interest left
 		return 1.f;
+	if (!node)
+		return curFrac;
 	for (i = 0; i < 4; i++) {
 		if (!node->child[i])
 			continue;

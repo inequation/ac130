@@ -1,5 +1,5 @@
 static const char SPRITE_VS[] = STRINGIFY(
-varying vec4 colour;
+varying float alpha;
 
 void main() {
 	gl_TexCoord[0] = gl_MultiTexCoord0;
@@ -26,6 +26,6 @@ void main() {
 		gl_ModelViewMatrix * vec4(gl_MultiTexCoord1.xyz, 1.0)
 	);
 	gl_Position = gl_ProjectionMatrix * mat * gl_Vertex;
-	colour = vec4(1.0, 1.0, 1.0, gl_MultiTexCoord2.y);
+	alpha = gl_MultiTexCoord2.y;
 }
 );

@@ -1,8 +1,9 @@
 static const char SPRITE_FS[] = STRINGIFY(
 uniform sampler2D spriteTex;
-varying vec4 colour;
+varying float alpha;
 
 void main() {
-	gl_FragColor = texture2D(spriteTex, gl_TexCoord[0].st) * colour;
+	vec4 c = texture2D(spriteTex, gl_TexCoord[0].st);
+	gl_FragColor = vec4(c.r, c.r, c.r, c.a * alpha);
 }
 );

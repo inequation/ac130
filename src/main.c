@@ -98,24 +98,27 @@ int main (int argc, char *argv[]) {
 		fprintf(stderr, "Unable to init renderer\n");
 		return 1;
 	}
+	extern SDL_Window	*r_screen;
 
 	// initialize the system random number generator
 	srand((uint)time(NULL));
 
 	// set window caption to say that we're working
-	SDL_WM_SetCaption("AC-130 - Generating resources, please wait...",
-					"AC-130");
+	SDL_SetWindowTitle(r_screen, "AC-130 - Generating resources, please wait...");
 
 	// hide mouse cursor and grab input
-	SDL_ShowCursor(0);
+	SDL_SetRelativeMouseMode(SDL_TRUE);
+    SDL_bool grab =
 #ifdef NDEBUG
-	SDL_WM_GrabInput(SDL_GRAB_ON);
+        SDL_TRUE
 #else
-	bool grab = m_full_screen;
-	SDL_WM_GrabInput(grab ? SDL_GRAB_ON : SDL_GRAB_OFF);
+        m_full_screen ? SDL_TRUE : SDL_FALSE
 #endif // NDEBUG
+    ;
+	SDL_SetWindowGrab(r_screen, grab);
 
 	// make sure SDL cleans up before exit
+	// FIXME: apparently, this is bad
 	atexit(SDL_Quit);
 
 	// clear out input structs
@@ -126,7 +129,7 @@ int main (int argc, char *argv[]) {
 	g_init();
 
 	// update window caption to say that we're done generating stuff
-	SDL_WM_SetCaption("AC-130", "AC-130");
+	SDL_SetWindowTitle(r_screen, "AC-130");
 
 	memset(&prevInput, 0, sizeof(prevInput));
 
@@ -139,8 +142,8 @@ int main (int argc, char *argv[]) {
 #ifndef NDEBUG
 	// grab the input in debug
 	if (!grab) {
-		SDL_WM_GrabInput(SDL_GRAB_ON);
-		grab = true;
+        grab = SDL_TRUE;
+		SDL_SetWindowGrab(r_screen, grab);
 	}
 #endif
 
@@ -185,13 +188,8 @@ int main (int argc, char *argv[]) {
 #ifndef NDEBUG
 						case SDLK_g:
 							grab = !grab;
-							if (grab) {
-								SDL_WM_GrabInput(SDL_GRAB_ON);
-								SDL_ShowCursor(0);
-							} else {
-								SDL_WM_GrabInput(SDL_GRAB_OFF);
-								SDL_ShowCursor(1);
-							}
+							SDL_SetWindowGrab(r_screen, grab);
+                            SDL_SetRelativeMouseMode(grab);
 							break;
 #endif // NDEBUG
 						default:	// shut up compiler
@@ -240,8 +238,8 @@ int main (int argc, char *argv[]) {
 	} // end main loop
 
 	// show mouse cursor and release input
-	SDL_ShowCursor(1);
-	SDL_WM_GrabInput(SDL_GRAB_OFF);
+	SDL_SetWindowGrab(r_screen, SDL_FALSE);
+    SDL_SetRelativeMouseMode(SDL_FALSE);
 
 	// shut all subsystems down
 	r_shutdown();

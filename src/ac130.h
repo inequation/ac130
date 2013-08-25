@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <float.h>
-#include <SDL/SDL.h>
+#include <SDL2/SDL.h>
 #include <assert.h>
 
 // our own math module

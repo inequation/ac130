@@ -5,7 +5,8 @@
 
 #include "r_local.h"
 
-SDL_Surface	*r_screen;
+SDL_Window	*r_screen;
+SDL_GLContext  r_context;
 
 // counters for measuring performance
 uint		*r_tri_counter;
@@ -216,14 +217,22 @@ bool r_init(uint *vcounter, uint *tcounter,
 		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 	}
 
+	// stick to old GL 1.4 for now
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 4);
+
 	// we need this parameter to be squared anyway
 	m_terrain_LOD *= m_terrain_LOD;
 
-	if (!(r_screen = SDL_SetVideoMode(m_screen_width, m_screen_height,
-		24, SDL_OPENGL | (m_full_screen ? SDL_FULLSCREEN : 0)))) {
-		fprintf(stderr, "SDL_SetVideoMode failed: %s\n", SDL_GetError());
+	if (!(r_screen = SDL_CreateWindow("AC-130",
+        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+        m_screen_width, m_screen_height,
+        SDL_WINDOW_OPENGL | (m_full_screen ? SDL_WINDOW_FULLSCREEN : 0)))) {
+		fprintf(stderr, "SDL_CreateWindow failed: %s\n", SDL_GetError());
 		return false;
 	}
+
+	r_context = SDL_GL_CreateContext(r_screen);
 
 	if (!vcounter || !tcounter || !dpcounter || !cpcounter)
 		return false;
@@ -232,8 +241,6 @@ bool r_init(uint *vcounter, uint *tcounter,
 	r_tri_counter = tcounter;
 	r_visible_patch_counter = dpcounter;
 	r_culled_patch_counter = cpcounter;
-
-	SDL_WM_SetCaption("AC-130", "AC-130");
 
 	// initialize the extension wrangler
 	glewInit();
@@ -314,6 +321,9 @@ void r_shutdown(void) {
 
 	glDeleteTextures(sizeof(r_frame_tex) / sizeof(r_frame_tex[0]), r_frame_tex);
 	glDeleteTextures(1, &r_2D_tex);
+
+	SDL_GL_DeleteContext(r_context);
+	SDL_DestroyWindow(r_screen);
 
 	// close SDL down
 	SDL_QuitSubSystem(SDL_INIT_VIDEO);	// FIXME: this shuts input down as well
@@ -484,5 +494,5 @@ void r_composite(float negative, float contrast) {
 	glUseProgramObjectARB(0);
 
 	// dump everything to screen
-	SDL_GL_SwapBuffers();
+	SDL_GL_SwapWindow(r_screen);
 }

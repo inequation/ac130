@@ -12,7 +12,7 @@
 #endif // WIN32
 #include <GL/glew.h>
 #define NO_SDL_GLEXT	// GLEW takes care of extensions
-#include <SDL/SDL_opengl.h>
+#include <SDL2/SDL_opengl.h>
 #include <GL/glu.h>
 
 /// \file r_local.h

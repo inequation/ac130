@@ -30,7 +30,7 @@
 					<Add option="-pg" />
 					<Add library="GLEW" />
 					<Add library="GL" />
-					<Add library="SDL" />
+					<Add library="SDL2" />
 				</Linker>
 			</Target>
 			<Target title="Unix Release">
@@ -51,7 +51,7 @@
 					<Add option="-s" />
 					<Add library="GLEW" />
 					<Add library="GL" />
-					<Add library="SDL" />
+					<Add library="SDL2" />
 				</Linker>
 			</Target>
 			<Target title="Win32 Debug">
@@ -77,8 +77,7 @@
 					<Add option="-pg" />
 					<Add library="mingw32" />
 					<Add library="glew32s" />
-					<Add library="SDLmain" />
-					<Add library="SDL.dll" />
+					<Add library="SDL2.dll" />
 					<Add library="opengl32" />
 				</Linker>
 			</Target>
@@ -100,8 +99,7 @@
 					<Add option="-s" />
 					<Add library="mingw32" />
 					<Add library="glew32s" />
-					<Add library="SDLmain" />
-					<Add library="SDL.dll" />
+					<Add library="SDL2.dll" />
 					<Add library="opengl32" />
 				</Linker>
 			</Target>

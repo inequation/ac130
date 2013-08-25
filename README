@@ -2,3 +2,5 @@ AC-130 is an arcade shooter game with old-school gameplay delivered in a modern 
 
 Written in 2010 as part of a C programming assignment at the Silesian University of Technology.
 Migrated from Sourceforge SVN in August 2013.
+
+Dependencies: SDL 1.2, GLEW, OpenGL

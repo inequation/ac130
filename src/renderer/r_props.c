@@ -55,7 +55,7 @@ static void r_recurse_proptree_drawall(ac_prop_t *node) {
 		int i;
 		float d2;
 		ac_tree_t *t;
-		int ofs, num;
+		long ofs, num;
 		// pick level of detail
 		ac_vec4_t l = ac_vec_mulf(
 			ac_vec_add(node->bounds[0], node->bounds[1]), 0.5);

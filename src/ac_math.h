@@ -36,12 +36,17 @@ typedef union {
 	__m128					sse;	///< SSE 128-bit data type
 } ac_vec4_t;
 
-// This is to fix certain SSE-related crashes. What happens is that since I'm
-// mixing non-SSE and SSE code, it can sometimes happen that the stack is
-// aligned to 4 bytes (the legacy way) instead of 16 bytes (what SSE expects).
-// This can lead to seemingly random crashes. Adding this attribute causes the
-// compiler to add some code to enforce 16-byte alignment.
+// This is to fix certain SSE-related crashes on 32-bit systems (it's
+// unnecessary on x86-64). What happens is that since I'm mixing non-SSE and SSE
+// code, it can sometimes happen that the stack is aligned to 4 bytes (the
+// legacy way) instead of 16 bytes (what SSE expects). This can lead to
+// seemingly random crashes. Adding this attribute causes the compiler to add
+// some code to enforce 16-byte alignment.
+#if __x86_64__
+#define STACK_ALIGN
+#else
 #define STACK_ALIGN		__attribute__((force_align_arg_pointer))
+#endif
 
 /// \f$ \vec a = [x, y, z, w] \f$
 extern inline ac_vec4_t ac_vec_set(float x, float y, float z, float w)

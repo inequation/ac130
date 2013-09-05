@@ -171,7 +171,7 @@ static bool r_init_FBO(void) {
 		// check FBO status
 		status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
 		if(status != GL_FRAMEBUFFER_COMPLETE_EXT) {
-			fprintf(stderr, "Incomplete frame buffer object #%d: %s\n", i,
+			fprintf(stderr, "Incomplete frame buffer object #%zd: %s\n", i,
 				status == GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT_EXT ?
 					"attachment"
 				: status == GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT ?

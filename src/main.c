@@ -70,6 +70,37 @@ static void parse_args(int argc, char *argv[]) {
 	}
 }
 
+static bool initialize_controller(int index,
+	SDL_GameController **controller, SDL_Haptic **rumbler) {
+	*controller = SDL_GameControllerOpen(index);
+	if (*controller) {
+		SDL_Joystick *joystick = SDL_GameControllerGetJoystick(*controller);
+		// also try getting the rumble device
+		*rumbler = SDL_HapticOpenFromJoystick(joystick);
+		// try the initializing the rumbler
+		if (*rumbler && !SDL_HapticRumbleInit(*rumbler))
+			SDL_HapticClose(*rumbler);
+		printf("Opened controller #%d (%s) with%s rumble (%s)\n",
+			index, SDL_GameControllerName(*controller), *rumbler ? "" : "out",
+			SDL_GetError());
+		return true;
+	}
+	return false;
+}
+
+static void destroy_controller(SDL_GameController **controller,
+	SDL_Haptic **rumbler) {
+	if (*controller)
+		printf("Destroying controller %s\n",
+			SDL_GameControllerName(*controller));
+	if (*rumbler)
+		SDL_HapticClose(*rumbler);
+	if (*controller)
+		SDL_GameControllerClose(*controller);
+	*controller = NULL;
+	*rumbler = NULL;
+}
+
 int main (int argc, char *argv[]) {
 	Uint32		prevTime;	/// Time of the previous frame time in milliseconds.
 	Uint32		curTime;	/// Time of the current frame time in milliseconds.
@@ -84,11 +115,15 @@ int main (int argc, char *argv[]) {
 	uint		dpCount = 0;
 	uint		cpCount = 0;
 	uint		frameCountTime;
+	int			index;
+	SDL_GameController	*controller;
+	SDL_Haptic			*rumbler;
+	Sint16		controllerAxes[SDL_CONTROLLER_AXIS_MAX] = {0};
 
 	parse_args(argc, argv);
 
 	// initialize SDL
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0) {
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) < 0) {
 		fprintf(stderr, "Unable to init SDL: %s\n", SDL_GetError());
 		return 1;
 	}
@@ -146,6 +181,15 @@ int main (int argc, char *argv[]) {
 		SDL_SetWindowGrab(r_screen, grab);
 	}
 #endif
+
+	// try using the first available game controller
+	controller = NULL;
+	rumbler = NULL;
+	for (index = -1; index < SDL_NumJoysticks(); ++index) {
+		if (SDL_IsGameController(index)
+			&& initialize_controller(index, &controller, &rumbler))
+			break;
+	}
 
 	// program main loop
 	done = false;
@@ -209,11 +253,72 @@ int main (int argc, char *argv[]) {
 					curInput.deltaX = event.motion.xrel;
 					curInput.deltaY = event.motion.yrel;
 					break;
+				case SDL_CONTROLLERDEVICEADDED:
+					if (!controller)
+						initialize_controller(event.cdevice.which,
+							&controller, &rumbler);
+					break;
+				case SDL_CONTROLLERDEVICEREMOVED:
+					if (controller)
+						destroy_controller(&controller, &rumbler);
+					break;
+				case SDL_CONTROLLERAXISMOTION:
+					// special case for the triggers - map them to buttons
+					if (/*event.caxis.axis == SDL_CONTROLLER_AXIS_TRIGGERLEFT
+						||*/ event.caxis.axis == SDL_CONTROLLER_AXIS_TRIGGERRIGHT) {
+						#define TRIGGER_AXIS_THRESHOLD	10000
+						// neat little trick here with arithmetic on booleans :)
+						int cross = (event.caxis.value > TRIGGER_AXIS_THRESHOLD)
+							- (controllerAxes[event.caxis.axis]
+								> TRIGGER_AXIS_THRESHOLD);
+						if (cross > 0)
+							curInput.flags |= INPUT_MOUSE_LEFT;
+						else if (cross < 0)
+							curInput.flags &= ~INPUT_MOUSE_LEFT;
+					}
+					controllerAxes[event.caxis.axis] = event.caxis.value;
+					break;
+				case SDL_CONTROLLERBUTTONDOWN:
+				case SDL_CONTROLLERBUTTONUP:
+					{
+						ac_input_flags_t flag = 0;
+						switch (event.cbutton.button) {
+							case SDL_CONTROLLER_BUTTON_A:
+								flag = INPUT_NEGATIVE;
+								break;
+							case SDL_CONTROLLER_BUTTON_Y:
+								flag = INPUT_MOUSE_RIGHT;
+								break;
+							case SDL_CONTROLLER_BUTTON_START:
+								flag = INPUT_PAUSE;
+								break;
+							case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+								flag = INPUT_1;
+								break;
+							case SDL_CONTROLLER_BUTTON_DPAD_UP:
+								flag = INPUT_2;
+								break;
+							case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+								flag = INPUT_3;
+								break;
+						}
+						if (event.cbutton.state == SDL_PRESSED)
+							curInput.flags |= flag;
+						else
+							curInput.flags &= ~flag;
+					}
+					break;
 			}
 		}
 
+		// synthesize game controller axis input
+		if (controller) {
+			curInput.deltaX = controllerAxes[SDL_CONTROLLER_AXIS_RIGHTX] / 2048;
+			curInput.deltaY = controllerAxes[SDL_CONTROLLER_AXIS_RIGHTY] / 2048;
+		}
+
 		// show fps
-		if (curTime - frameCountTime >= 2000) {
+		if (false && curTime - frameCountTime >= 2000) {
 			float perFrameScale = 1.f / (float)frameCount;
 			printf("%.0f FPS, %.0f tris/%.0f verts, "
 					"%.0f/%.0f terrain patches culled (per frame)\n",

@@ -56,12 +56,21 @@ typedef struct {
 /// Real muzzle velocity: 494m/s
 #define WEAP_MUZZVEL_M102	160//494
 
+/// Rumble to apply at each shot
+#define WEAP_RUMBLE_M61		0.6
+/// Rumble to apply at each shot
+#define WEAP_RUMBLE_L60		1.0
+/// Rumble to apply at each shot
+#define WEAP_RUMBLE_M102	3.0
+
 /// Amount of time the camera will shake after a M102 shot, in seconds.
 #define SHAKE_TIME			0.45
 /// Amount of time it takes the display to switch to the negative, in seconds.
 #define NEGATIVE_TIME		0.25
 /// Amount of time the contrast enhancement effect lasts, in seconds.
 #define EXPLOSION_TIME		2.0
+/// Amount of rumble falling off per second
+#define RUMBLE_FALLOFF		2.0
 
 // main game module
 float g_sample_height(float x, float y);

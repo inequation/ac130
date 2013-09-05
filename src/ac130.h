@@ -111,6 +111,9 @@ extern bool m_FSAA;
 /// whether compatbilitiy mode shaders are enabled (defaults to false, -c commandline option to enable)
 extern bool m_compatshader;
 
+/// force-feedback rumble intensity
+extern float m_rumble_intensity;
+
 /// @}
 
 // =========================================================

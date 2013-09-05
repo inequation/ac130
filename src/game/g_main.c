@@ -415,13 +415,19 @@ void g_fire_weapon(weap_t w) {
 					if (++m61 % 5 == 0)
 						g_projs[i].weap = WP_M61_TRACER;
 					g_projs[i].vel = ac_vec_mulf(g_forward, WEAP_MUZZVEL_M61);
+					if (m_rumble_intensity < WEAP_RUMBLE_M61)
+						m_rumble_intensity = WEAP_RUMBLE_M61;
 					break;
 				case WP_L60:
 					g_projs[i].vel = ac_vec_mulf(g_forward, WEAP_MUZZVEL_L60);
+					if (m_rumble_intensity < WEAP_RUMBLE_L60)
+						m_rumble_intensity = WEAP_RUMBLE_L60;
 					break;
 				case WP_M102:
 					g_projs[i].vel = ac_vec_mulf(g_forward, WEAP_MUZZVEL_M102);
 					g_shake_time = g_time;
+					if (m_rumble_intensity < WEAP_RUMBLE_M102)
+						m_rumble_intensity = WEAP_RUMBLE_M102;
 					break;
 				// shut up compiler
 				case WP_NONE:
@@ -816,6 +822,11 @@ void g_frame(int ticks, float frameTime, ac_input_t *input) {
 
 	// operate the weapons
 	g_player_think(input);
+
+	// rumble falloff
+	m_rumble_intensity -= frameTime * RUMBLE_FALLOFF;
+	if (m_rumble_intensity < 0.f)
+		m_rumble_intensity = 0.f;
 
 	// generate another viewpoint for gun shakes
 	if (g_time - g_shake_time <= SHAKE_TIME) {

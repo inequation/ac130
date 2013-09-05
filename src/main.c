@@ -15,6 +15,8 @@ float m_terrain_LOD = 40.f;
 bool m_FSAA = true;
 bool m_compatshader = false;
 
+float m_rumble_intensity;
+
 static void parse_args(int argc, char *argv[]) {
 	int i;
 
@@ -83,6 +85,7 @@ static bool initialize_controller(int index,
 		printf("Opened controller #%d (%s) with%s rumble (%s)\n",
 			index, SDL_GameControllerName(*controller), *rumbler ? "" : "out",
 			SDL_GetError());
+		m_rumble_intensity = 0.f;
 		return true;
 	}
 	return false;
@@ -93,8 +96,10 @@ static void destroy_controller(SDL_GameController **controller,
 	if (*controller)
 		printf("Destroying controller %s\n",
 			SDL_GameControllerName(*controller));
-	if (*rumbler)
+	if (*rumbler) {
+		SDL_HapticRumbleStop(*rumbler);
 		SDL_HapticClose(*rumbler);
+	}
 	if (*controller)
 		SDL_GameControllerClose(*controller);
 	*controller = NULL;
@@ -123,7 +128,8 @@ int main (int argc, char *argv[]) {
 	parse_args(argc, argv);
 
 	// initialize SDL
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) < 0) {
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER
+		| SDL_INIT_GAMECONTROLLER | SDL_INIT_HAPTIC) < 0) {
 		fprintf(stderr, "Unable to init SDL: %s\n", SDL_GetError());
 		return 1;
 	}
@@ -311,10 +317,15 @@ int main (int argc, char *argv[]) {
 			}
 		}
 
-		// synthesize game controller axis input
+		// synthesize game controller axis input and play rumble
 		if (controller) {
 			curInput.deltaX = controllerAxes[SDL_CONTROLLER_AXIS_RIGHTX] / 2048;
 			curInput.deltaY = controllerAxes[SDL_CONTROLLER_AXIS_RIGHTY] / 2048;
+			if (rumbler) {
+				// assume a "tail" of 33 ms, we should update sooner anyway
+				SDL_HapticRumblePlay(rumbler,
+					m_rumble_intensity > 1.0 ? 1.0 : m_rumble_intensity, 33);
+			}
 		}
 
 		// show fps

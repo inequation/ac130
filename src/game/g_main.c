@@ -117,7 +117,7 @@ void g_advance_particles(void) {
 	size_t i;
 	ac_vec4_t grav = ac_vec_mul(g_gravity, g_frameTimeVec);
 	ac_vec4_t tmp;
-	float v, q, C, g = 1.f;
+	float v, q = 0.f, C, g = 1.f;   // shut up compiler
 	particle_t *p;
 
 	// we need the proper Z-order, so sort the particle array first
@@ -741,6 +741,7 @@ void g_viewpoint_think(ac_input_t *input) {
 			fy = 1.5f;
 			break;
 		default:	// shut up compiler
+			fy = 0.f;
 			break;
 	}
 

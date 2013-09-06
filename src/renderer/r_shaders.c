@@ -118,7 +118,18 @@ bool r_create_shaders(void) {
 	if (!r_create_program("Compositor", COMPOSITOR_VS,
 		(m_compatshader ? COMPOSITOR_COMPAT_FS : COMPOSITOR_FS),
 		&r_comp_vs, &r_comp_fs, &r_comp_prog))
-		return false;
+	{
+		// try the compat shader before definitely failing
+		if (!m_compatshader) {
+			fprintf(stderr, "Failed compositor shader compilation, "
+				"falling back to compat\n");
+			if (!r_create_program("Compositor", COMPOSITOR_VS,
+				COMPOSITOR_COMPAT_FS, &r_comp_vs, &r_comp_fs, &r_comp_prog))
+				return false;
+		}
+		else
+			return false;
+	}
 	// create the font GPU program
 	if (!r_create_program("Font", COMPOSITOR_VS, FONT_FS,
 		&r_font_vs, &r_font_fs, &r_font_prog))

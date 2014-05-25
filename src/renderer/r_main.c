@@ -129,6 +129,8 @@ static bool r_init_FBO(void) {
 	size_t i;
 	GLenum status;
 
+	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
+
 	// depth RBO initialization
 	glGenRenderbuffersEXT(1, &r_depth_RBO);
 	glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, r_depth_RBO);
@@ -190,6 +192,9 @@ static bool r_init_FBO(void) {
 				: status == GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER_EXT ?
 					"read buffer"
 				: "unsupported");
+
+			OPENGL_EVENT_END();
+
 			return false;
 		}
 		// make sure all buffers are cleared before proceeding
@@ -199,6 +204,9 @@ static bool r_init_FBO(void) {
 	glBindTexture(GL_TEXTURE_2D, 0);
 	// switch back to window-system-provided framebuffer
 	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+
+	OPENGL_EVENT_END();
+
 	return true;
 }
 
@@ -266,6 +274,8 @@ bool r_init(uint *vcounter, uint *tcounter,
 		return false;
 	}
 
+	OPENGL_EVENT_BEGIN(0, "Initialization");
+
 	// all geometry uses vertex and index arrays
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -305,10 +315,14 @@ bool r_init(uint *vcounter, uint *tcounter,
 	r_create_font();
 	r_create_footmobile();
 
+	OPENGL_EVENT_END();
+
 	return true;
 }
 
 void r_shutdown(void) {
+	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
+
 	r_destroy_footmobile();
 	r_destroy_font();
 	r_destroy_fx();
@@ -321,6 +335,8 @@ void r_shutdown(void) {
 
 	glDeleteTextures(sizeof(r_frame_tex) / sizeof(r_frame_tex[0]), r_frame_tex);
 	glDeleteTextures(1, &r_2D_tex);
+
+	OPENGL_EVENT_END();
 
 	SDL_GL_DeleteContext(r_context);
 	SDL_DestroyWindow(r_screen);
@@ -341,6 +357,8 @@ void r_start_scene(int time, ac_viewpoint_t *vp) {
 	double x, y;
 	float cy, cp, sy, sp;
 	ac_vec4_t fwd, right, up;
+
+	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
 
 	// scroll the FBO every 27 ms
 	if (time - lastTime >= 27) {
@@ -423,9 +441,13 @@ void r_start_scene(int time, ac_viewpoint_t *vp) {
 	r_draw_props();
 
 	glDisable(GL_FOG);
+
+	OPENGL_EVENT_END();
 }
 
 void r_finish_3D(void) {
+	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
+
 	// switch to the 2D FBO
 	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, r_FBOs[FBO_2D]);
 
@@ -445,9 +467,13 @@ void r_finish_3D(void) {
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
+
+	OPENGL_EVENT_END();
 }
 
 void r_finish_2D(void) {
+	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
+
 	glDisable(GL_BLEND);
 
 	// switch back to system-provided FBO
@@ -457,10 +483,14 @@ void r_finish_2D(void) {
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	glOrtho(0, 1, 0, 1, -1, 1);
+
+	OPENGL_EVENT_END();
 }
 
 void r_composite(float negative, float contrast) {
 	int i;
+
+	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
 
 	glClear(GL_COLOR_BUFFER_BIT);
 	glUseProgramObjectARB(r_comp_prog);
@@ -492,6 +522,8 @@ void r_composite(float negative, float contrast) {
 	glEnd();
 
 	glUseProgramObjectARB(0);
+
+	OPENGL_EVENT_END();
 
 	// dump everything to screen
 	SDL_GL_SwapWindow(r_screen);

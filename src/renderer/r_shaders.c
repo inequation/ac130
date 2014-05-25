@@ -55,6 +55,10 @@ int			r_comp_contrast = -1;
 static bool r_shader_check(GLuint obj, GLenum what,
 		const char *id, char *desc) {
 	int retval, loglen;
+
+	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
+	OPENGL_EVENT(0, desc);
+
 	glGetObjectParameterivARB(obj, what, &retval);
 	glGetObjectParameterivARB(obj, GL_OBJECT_INFO_LOG_LENGTH_ARB, &loglen);
 	if (retval != GL_TRUE || loglen > 3) {
@@ -63,14 +67,22 @@ static bool r_shader_check(GLuint obj, GLenum what,
 		fprintf(stderr, "%s %s %s:\n%s\n", id, desc,
 			retval == GL_TRUE ? "warning" : "error", p);
 		free(p);
-		if (retval != GL_TRUE)
+		if (retval != GL_TRUE) {
+			OPENGL_EVENT_END();
+
 			return false;
+		}
 	}
+
+	OPENGL_EVENT_END();
+
 	return true;
 }
 
 static inline bool r_create_program(const char *id, const char *vss,
 	const char *fss, uint *vs, uint *fs, uint *prog) {
+	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
+
 	*vs = glCreateShaderObjectARB(GL_VERTEX_SHADER_ARB);
 	*fs = glCreateShaderObjectARB(GL_FRAGMENT_SHADER_ARB);
 	// shut up compiler...
@@ -80,14 +92,20 @@ static inline bool r_create_program(const char *id, const char *vss,
 	// compile vertex shader
 	glCompileShaderARB(*vs);
 	if (!r_shader_check(*vs, GL_OBJECT_COMPILE_STATUS_ARB, id,
-		"vertex shader compilation"))
+		"vertex shader compilation")) {
+		OPENGL_EVENT_END();
+
 		return false;
+	}
 
 	// compile fragment shader
 	glCompileShaderARB(*fs);
 	if (!r_shader_check(*fs, GL_OBJECT_COMPILE_STATUS_ARB, id,
-		"fragment shader compilation"))
+		"fragment shader compilation")) {
+		OPENGL_EVENT_END();
+
 		return false;
+	}
 
 	// link the program together
 	*prog = glCreateProgramObjectARB();
@@ -95,14 +113,22 @@ static inline bool r_create_program(const char *id, const char *vss,
 	glAttachObjectARB(*prog, *fs);
 	glLinkProgramARB(*prog);
 	if (!r_shader_check(*prog, GL_OBJECT_LINK_STATUS_ARB, id,
-		"GPU program linking"))
+		"GPU program linking")) {
+		OPENGL_EVENT_END();
+
 		return false;
+	}
 
 	// validate the program
 	glValidateProgramARB(*prog);
 	if (!r_shader_check(*prog, GL_OBJECT_VALIDATE_STATUS_ARB, id,
-		"GPU program validation"))
+		"GPU program validation")) {
+		OPENGL_EVENT_END();
+
 		return false;
+	}
+
+	OPENGL_EVENT_END();
 
 	return true;
 }
@@ -110,52 +136,84 @@ static inline bool r_create_program(const char *id, const char *vss,
 bool r_create_shaders(void) {
 	int i, frames[1 + FRAME_TRACE];
 
+	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
+
 	// create the terrain GPU program
 	if (!r_create_program("Terrain", TERRAIN_VS, TERRAIN_FS,
-		&r_ter_vs, &r_ter_fs, &r_ter_prog))
+		&r_ter_vs, &r_ter_fs, &r_ter_prog)) {
+		OPENGL_EVENT_END();
+
 		return false;
+	}
 	// create the compositor GPU program
 	if (!r_create_program("Compositor", COMPOSITOR_VS,
 		(m_compatshader ? COMPOSITOR_COMPAT_FS : COMPOSITOR_FS),
-		&r_comp_vs, &r_comp_fs, &r_comp_prog))
+		&r_comp_vs, &r_comp_fs, &r_comp_prog)) {
+		OPENGL_EVENT_END();
+
 		return false;
+	}
 	// create the font GPU program
 	if (!r_create_program("Font", COMPOSITOR_VS, FONT_FS,
-		&r_font_vs, &r_font_fs, &r_font_prog))
+		&r_font_vs, &r_font_fs, &r_font_prog)) {
+		OPENGL_EVENT_END();
+
 		return false;
+	}
 	// create the prop GPU program
 	if (!r_create_program("Prop", PROP_VS, PROP_FS,
-		&r_prop_vs, &r_prop_fs, &r_prop_prog))
+		&r_prop_vs, &r_prop_fs, &r_prop_prog)) {
+		OPENGL_EVENT_END();
+
 		return false;
+	}
 	// create the sprite GPU program
 	if (!r_create_program("Sprite", SPRITE_VS, SPRITE_FS,
-		&r_sprite_vs, &r_sprite_fs, &r_sprite_prog))
+		&r_sprite_vs, &r_sprite_fs, &r_sprite_prog)) {
+		OPENGL_EVENT_END();
+
 		return false;
+	}
 	// create the footmobile GPU program
 	if (!r_create_program("Footmobile", FOOTMOBILE_VS, FONT_FS,
-		&r_fmb_vs, &r_fmb_fs, &r_fmb_prog))
+		&r_fmb_vs, &r_fmb_fs, &r_fmb_prog)) {
+		OPENGL_EVENT_END();
+
 		return false;
+	}
 
 	// set the terrain shader up
 	glUseProgramObjectARB(r_ter_prog);
 	if ((i = glGetUniformLocationARB(r_ter_prog, "terTex")) < 0) {
 		fprintf(stderr, "Failed to find terrain texture uniform variable\n");
+
+		OPENGL_EVENT_END();
+
 		return false;
 	}
 	glUniform1iARB(i, 0);
 	if ((i = glGetUniformLocationARB(r_ter_prog, "constParams")) < 0) {
 		fprintf(stderr, "Failed to find constant params uniform variable\n");
+
+		OPENGL_EVENT_END();
+
 		return false;
 	}
 	glUniform2fARB(i, HEIGHTMAP_SIZE, HEIGHT_SCALE);
 	if ((r_ter_patch_params = glGetUniformLocationARB(r_ter_prog,
 		"patchParams")) < 0) {
 		fprintf(stderr, "Failed to find per-patch params uniform variable\n");
+
+		OPENGL_EVENT_END();
+
 		return false;
 	}
 	if ((r_ter_height_samples = glGetUniformLocationARB(r_ter_prog,
 		"heightSamples")) < 0) {
 		fprintf(stderr, "Failed to find height samples uniform variable\n");
+
+		OPENGL_EVENT_END();
+
 		return false;
 	}
 
@@ -163,6 +221,9 @@ bool r_create_shaders(void) {
 	glUseProgramObjectARB(r_prop_prog);
 	if ((i = glGetUniformLocationARB(r_prop_prog, "propTex")) < 0) {
 		fprintf(stderr, "Failed to find prop texture uniform variable\n");
+
+		OPENGL_EVENT_END();
+
 		return false;
 	}
 	glUniform1iARB(i, 0);
@@ -171,6 +232,9 @@ bool r_create_shaders(void) {
 	glUseProgramObjectARB(r_sprite_prog);
 	if ((i = glGetUniformLocationARB(r_sprite_prog, "spriteTex")) < 0) {
 		fprintf(stderr, "Failed to find sprite texture uniform variable\n");
+
+		OPENGL_EVENT_END();
+
 		return false;
 	}
 	glUniform1iARB(i, 0);
@@ -179,6 +243,9 @@ bool r_create_shaders(void) {
 	glUseProgramObjectARB(r_fmb_prog);
 	if ((i = glGetUniformLocationARB(r_fmb_prog, "fontTex")) < 0) {
 		fprintf(stderr, "Failed to find footmobile texture uniform variable\n");
+
+		OPENGL_EVENT_END();
+
 		return false;
 	}
 	glUniform1iARB(i, 0);
@@ -187,6 +254,9 @@ bool r_create_shaders(void) {
 	glUseProgramObjectARB(r_font_prog);
 	if ((i = glGetUniformLocationARB(r_font_prog, "fontTex")) < 0) {
 		fprintf(stderr, "Failed to find font texture uniform variable\n");
+
+		OPENGL_EVENT_END();
+
 		return false;
 	}
 	glUniform1iARB(i, 0);
@@ -195,19 +265,31 @@ bool r_create_shaders(void) {
 	glUseProgramObjectARB(r_comp_prog);
 	if ((i = glGetUniformLocationARB(r_comp_prog, "overlay")) < 0) {
 		fprintf(stderr, "Failed to find overlay uniform variable\n");
+
+		OPENGL_EVENT_END();
+
 		return false;
 	}
 	glUniform1iARB(i, 0);
 	if ((r_comp_frames = glGetUniformLocationARB(r_comp_prog, "frames")) < 0) {
 		fprintf(stderr, "Failed to find frames uniform variable\n");
+
+		OPENGL_EVENT_END();
+
 		return false;
 	}
 	if ((r_comp_neg = glGetUniformLocationARB(r_comp_prog, "negative")) < 0) {
 		fprintf(stderr, "Failed to find negative uniform variable\n");
+
+		OPENGL_EVENT_END();
+
 		return false;
 	}
 	if ((r_comp_contrast = glGetUniformLocationARB(r_comp_prog, "cont")) < 0) {
 		fprintf(stderr, "Failed to find contrast uniform variable\n");
+
+		OPENGL_EVENT_END();
+
 		return false;
 	}
 	// fill the frames array; frames at GL_TEXTURE1 + i
@@ -217,21 +299,31 @@ bool r_create_shaders(void) {
 
 	glUseProgramObjectARB(0);
 
+	OPENGL_EVENT_END();
+
 	return true;
 }
 
 static inline void r_destroy_program(uint prog, uint vs, uint fs) {
+	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
+
 	glDetachObjectARB(prog, vs);
 	glDetachObjectARB(prog, fs);
 	glDeleteObjectARB(vs);
 	glDeleteObjectARB(fs);
 	glDeleteObjectARB(prog);
+
+	OPENGL_EVENT_END();
 }
 
 void r_destroy_shaders(void) {
+	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
+
 	r_destroy_program(r_comp_prog, r_comp_vs, r_comp_fs);
 	r_destroy_program(r_font_prog, r_font_vs, r_font_fs);
 	r_destroy_program(r_sprite_prog, r_sprite_vs, r_sprite_fs);
 	r_destroy_program(r_prop_prog, r_prop_vs, r_prop_fs);
 	r_destroy_program(r_ter_prog, r_ter_vs, r_ter_fs);
+
+	OPENGL_EVENT_END();
 }

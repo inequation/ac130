@@ -13,6 +13,8 @@ uint		r_fmb_tex;
 uint		r_fmb_VBOs[2];
 
 void r_create_footmobile(void) {
+	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
+
 	// generate texture
 	glGenTextures(1, &r_fmb_tex);
 	glBindTexture(GL_TEXTURE_2D, r_fmb_tex);
@@ -55,9 +57,13 @@ void r_create_footmobile(void) {
 	// unbind VBOs
 	glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
 	glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
+
+	OPENGL_EVENT_END();
 }
 
 void r_start_footmobiles(void) {
+	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
+
 	// make the necessary state changes
 	glBindTexture(GL_TEXTURE_2D, r_fmb_tex);
 	glDisable(GL_CULL_FACE);
@@ -71,10 +77,14 @@ void r_start_footmobiles(void) {
 	glTexCoordPointer(2, GL_FLOAT, sizeof(ac_vertex_t),
 					(void *)offsetof(ac_vertex_t, st[0]));
 	glUseProgramObjectARB(r_fmb_prog);
+
+	OPENGL_EVENT_END();
 }
 
 void r_draw_squad(ac_footmobile_t *squad, size_t troops) {
 	size_t i;
+
+	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
 
 	for (i = 0; i < troops; i++, squad++) {
 		glMultiTexCoord3fv(GL_TEXTURE1, squad->pos.f);
@@ -84,9 +94,13 @@ void r_draw_squad(ac_footmobile_t *squad, size_t troops) {
 		*r_vert_counter += 4;
 		*r_tri_counter += 2;
 	}
+
+	OPENGL_EVENT_END();
 }
 
 void r_finish_footmobiles(void) {
+	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
+
 	// bring the previous state back
 	glUseProgramObjectARB(0);
 	glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
@@ -96,9 +110,15 @@ void r_finish_footmobiles(void) {
 	glDepthMask(GL_TRUE);
 	glDisable(GL_BLEND);
 	glEnable(GL_CULL_FACE);
+
+	OPENGL_EVENT_END();
 }
 
 void r_destroy_footmobile(void) {
+	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
+
 	glDeleteBuffersARB(2, r_fmb_VBOs);
 	glDeleteTextures(1, &r_fmb_tex);
+
+	OPENGL_EVENT_END();
 }

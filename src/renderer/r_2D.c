@@ -12,6 +12,8 @@
 uint		r_font_tex;
 
 void r_create_font(void) {
+	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
+
 	// generate texture
 	glGenTextures(1, &r_font_tex);
 	glBindTexture(GL_TEXTURE_2D, r_font_tex);
@@ -25,6 +27,8 @@ void r_create_font(void) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
+
+	OPENGL_EVENT_END();
 }
 
 #define GLYPH_W	(float)FONT_WIDTH / 13.f
@@ -40,6 +44,8 @@ void r_draw_string(char *str, float ox, float oy, float scale) {
 	int c;
 	float x = ox, y = oy, s, t, dx = glyph_sw, dy = glyph_sh;
 	bool revord = false;
+
+	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
 
 	// handle align inversions
 	if (ox < 0.f) {
@@ -96,10 +102,15 @@ void r_draw_string(char *str, float ox, float oy, float scale) {
 	glEnd();
 	glUseProgramObjectARB(0);
 	glBindTexture(GL_TEXTURE_2D, 0);
+
+	OPENGL_EVENT_END();
 }
 
 void r_draw_lines(float pts[][2], uint num_pts, float width) {
 	uint i;
+
+	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
+
 	// need to scale line width because it's absolute in pixels, and we need it
 	// to be relative to window size
 	glLineWidth(width * (float)m_screen_width / 1024.f);
@@ -107,8 +118,14 @@ void r_draw_lines(float pts[][2], uint num_pts, float width) {
 	for (i = 0; i < num_pts; i++)
 		glVertex2fv(pts[i]);
 	glEnd();
+
+	OPENGL_EVENT_END();
 }
 
 void r_destroy_font(void) {
+	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
+
 	glDeleteTextures(1, &r_font_tex);
+
+	OPENGL_EVENT_END();
 }

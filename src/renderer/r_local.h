@@ -111,6 +111,29 @@ extern int	r_comp_frames;		///< frame texture indices
 extern int	r_comp_neg;			///< colour inversion coefficient
 extern int	r_comp_contrast;	///< contrast enhancement coefficient
 
+/// Control OpenGL debugging (callback and annotation). Defaults to debug builds.
+#ifndef OPENGL_DEBUG
+	#ifndef NDEBUG
+		#define OPENGL_DEBUG	1
+	#else
+		#define OPENGL_DEBUG	0
+	#endif
+#endif
+
+/// Short-hand for OpenGL call grouping: begin event.
+#define OPENGL_EVENT_BEGIN(id, name)										\
+	if (GLEW_KHR_debug)														\
+		glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, id, -1, name)
+/// Short-hand for OpenGL call grouping: end event.
+#define OPENGL_EVENT_END();													\
+	if (GLEW_KHR_debug)														\
+		glPopDebugGroup()
+/// Short-hand for one-off OpenGL event string marker.
+#define OPENGL_EVENT(id, str)												\
+	if (GLEW_KHR_debug)														\
+		glDebugMessageInsert(GL_DEBUG_SOURCE_APPLICATION,					\
+			GL_DEBUG_TYPE_OTHER, id, GL_DEBUG_SEVERITY_LOW, -1, str)
+
 /// @}
 
 #endif // R_LOCAL_H

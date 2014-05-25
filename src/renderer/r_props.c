@@ -23,6 +23,8 @@ void r_create_props(void) {
 					+ BLDG_SLNT_INDICES];
 	uchar		texture[PROP_TEXTURE_SIZE * PROP_TEXTURE_SIZE];
 
+	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
+
 	gen_props(texture, verts, indices);
 
 	// generate texture
@@ -48,9 +50,13 @@ void r_create_props(void) {
 	// unbind VBOs
 	glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
 	glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
+
+	OPENGL_EVENT_END();
 }
 
 static void r_recurse_proptree_drawall(ac_prop_t *node) {
+	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
+
 	if (node->trees) {
 		int i;
 		float d2;
@@ -74,6 +80,8 @@ static void r_recurse_proptree_drawall(ac_prop_t *node) {
 		}
 
 		for (t = node->trees, i = 0; i < TREES_PER_FIELD; i++, t++) {
+			OPENGL_EVENT_BEGIN(0, "Draw tree");
+
 			glMultiTexCoord3fv(GL_TEXTURE1, t->pos.f);
 			glMultiTexCoord4f(GL_TEXTURE2, t->XZscale, t->Yscale, t->XZscale,
 				t->ang);
@@ -81,29 +89,45 @@ static void r_recurse_proptree_drawall(ac_prop_t *node) {
 			glDrawElements(GL_TRIANGLE_FAN, num, GL_UNSIGNED_BYTE, (void *)ofs);
 			*r_vert_counter += num - 1;
 			*r_tri_counter += num - 2;
+
+			OPENGL_EVENT_END();
 		}
+
+		OPENGL_EVENT_END();
+
 		return;
 	} else if (node->bldgs) {
 		int i;
 		ac_bldg_t *b;
 		for (b = node->bldgs, i = 0; i < BLDGS_PER_FIELD; i++, b++) {
+			OPENGL_EVENT_BEGIN(0, "Draw building");
+
 			glMultiTexCoord3fv(GL_TEXTURE1, b->pos.f);
 			glMultiTexCoord4f(GL_TEXTURE2, b->Xscale, b->Yscale, b->Zscale,
 				b->ang);
 
 			if (b->slantedRoof) {
+				OPENGL_EVENT(0, "Slanted roof");
+
 				glDrawElements(GL_TRIANGLE_STRIP, BLDG_SLNT_INDICES,
 					GL_UNSIGNED_BYTE, (void *)(TREE_BASE * 3
 						+ BLDG_FLAT_INDICES));
 				*r_vert_counter += BLDG_FLAT_VERTS;
 				*r_tri_counter += BLDG_FLAT_INDICES - 2;
 			} else {
+				OPENGL_EVENT(0, "Flat roof");
+
 				glDrawElements(GL_TRIANGLE_STRIP, BLDG_FLAT_INDICES,
 					GL_UNSIGNED_BYTE, (void *)(TREE_BASE * 3));
 				*r_vert_counter += BLDG_SLNT_VERTS;
 				*r_tri_counter += BLDG_SLNT_INDICES - 2;
 			}
+
+			OPENGL_EVENT_END();
 		}
+
+		OPENGL_EVENT_END();
+
 		return;
 	}
 	if (node->child[0])
@@ -114,11 +138,16 @@ static void r_recurse_proptree_drawall(ac_prop_t *node) {
 		r_recurse_proptree_drawall(node->child[2]);
 	if (node->child[3])
 		r_recurse_proptree_drawall(node->child[3]);
+
+	OPENGL_EVENT_END();
 }
 
 static void r_recurse_proptree(ac_prop_t *node, int step) {
+	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
+
 	switch (r_cull_bbox(node->bounds)) {
 		case CR_OUTSIDE:
+			OPENGL_EVENT_END();
 			return;
 		case CR_INSIDE:
 			if (node)
@@ -127,6 +156,9 @@ static void r_recurse_proptree(ac_prop_t *node, int step) {
 		case CR_INTERSECT:
 			if ((step >>= 1) < 2 && node) {
 				r_recurse_proptree_drawall(node);
+
+				OPENGL_EVENT_END();
+
 				return;
 			}
 			if (node->child[0])
@@ -139,9 +171,13 @@ static void r_recurse_proptree(ac_prop_t *node, int step) {
 				r_recurse_proptree(node->child[3], step);
 			break;
 	}
+
+	OPENGL_EVENT_END();
 }
 
 void r_draw_props(void) {
+	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
+
 	// make the necessary state changes
 	glBindTexture(GL_TEXTURE_2D, r_prop_tex);
 	glBindBufferARB(GL_ARRAY_BUFFER_ARB, r_prop_VBOs[0]);
@@ -159,10 +195,16 @@ void r_draw_props(void) {
 	glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
 	glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
+
+	OPENGL_EVENT_END();
 }
 
 void r_destroy_props(void) {
+	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
+
 	gen_free_proptree(NULL);
 	glDeleteTextures(1, &r_prop_tex);
 	glDeleteBuffersARB(2, r_prop_VBOs);
+
+	OPENGL_EVENT_END();
 }

@@ -140,6 +140,9 @@ static void r_calc_terrain_lodlevels(void) {
 
 void r_create_terrain(void) {
 	ushort		indices[TERRAIN_NUM_INDICES];
+
+	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
+
 	// signal the game from time to time
 	g_loading_tick();
 	r_fill_terrain_indices(indices);
@@ -166,9 +169,13 @@ void r_create_terrain(void) {
 	// unbind VBOs
 	glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
 	glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
+
+	OPENGL_EVENT_END();
 }
 
 void r_set_heightmap(void) {
+	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
+
 	if (gen_heightmap != NULL)
 		glDeleteTextures(1, &r_hmap_tex);
 	glGenTextures(1, &r_hmap_tex);
@@ -181,6 +188,8 @@ void r_set_heightmap(void) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+	OPENGL_EVENT_END();
 }
 
 void r_destroy_terrain(void) {
@@ -212,6 +221,8 @@ static void r_terrain_patch(float bu, float bv, float scale) {
 #else
 	ac_vertex_t *v;
 #endif
+
+	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
 
 #ifdef UNIFORM_HEIGHTS
 	for (i = 0; i < TERRAIN_PATCH_SIZE; i++) {
@@ -279,6 +290,8 @@ static void r_terrain_patch(float bu, float bv, float scale) {
 	*r_vert_counter += TERRAIN_NUM_VERTS;
 	*r_tri_counter += TERRAIN_NUM_INDICES - 2;
 	(*r_visible_patch_counter)++;
+
+	OPENGL_EVENT_END();
 }
 
 static void r_recurse_terrain(float minU, float minV,
@@ -331,6 +344,8 @@ static void r_recurse_terrain(float minU, float minV,
 }
 
 void r_draw_terrain(void) {
+	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
+
 	glUseProgramObjectARB(r_ter_prog);
 	glBindBufferARB(GL_ARRAY_BUFFER_ARB, r_ter_VBOs[0]);
 	glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, r_ter_VBOs[1]);
@@ -344,4 +359,6 @@ void r_draw_terrain(void) {
 	glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
 	glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
 	glUseProgramObjectARB(0);
+
+	OPENGL_EVENT_END();
 }

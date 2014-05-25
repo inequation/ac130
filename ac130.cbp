@@ -12,7 +12,7 @@
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="-w -r 640x480 -noaa -c -t 5" />
+				<Option parameters="-aw -ar 640x480 -anoaa -ac -t 5" />
 				<Compiler>
 					<Add option="-Wshadow" />
 					<Add option="-Winit-self" />

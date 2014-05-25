@@ -33,7 +33,7 @@ void r_create_footmobile(void) {
 	// later on
 	ac_vertex_t verts[4];
 	uchar indices[4];
-	int i;
+	uint i;
 
 	for (i = 0; i < 4; i++) {
 		verts[i].pos = ac_vec_set(

@@ -267,7 +267,7 @@ static bool r_init_FBO(void) {
 bool r_init(uint *vcounter, uint *tcounter,
 					uint *dpcounter, uint *cpcounter) {
 	int i;
-	float aspect, fogcolour[] = {0, 0, 0, 1};
+	float fogcolour[] = {0, 0, 0, 1};
 	SDL_DisplayMode desktopMode;
 
 	// we need this parameter to be squared anyway
@@ -281,18 +281,6 @@ bool r_init(uint *vcounter, uint *tcounter,
 		m_screen_width = desktopMode.w;
 	if (m_screen_height <= 0)
 		m_screen_height = desktopMode.h;
-	// enforce a 4:3 or 5:4 aspect ratio
-	aspect = (float)m_screen_width / (float)m_screen_height;
-	/*if (fabs(aspect - 4.f / 3.f) > 0.01
-		&& fabs(aspect - 5.f / 4.f) > 0.01) {
-		// OK, this aspect isn't right, shrink the window to get 4:3
-		if (aspect > 4.f / 3.f)
-			m_screen_width = (4.f / 3.f) * m_screen_height;
-		else
-			m_screen_height = 0.75 * m_screen_width;
-		printf("Requested resolution has a non-4:3/5:4 aspect ratio, "
-			"corrected to %dx%d\n", m_screen_width, m_screen_height);
-	}*/
 
 	// these GL attribs don't change regardless of matching visual search
 	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 0);

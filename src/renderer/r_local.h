@@ -120,19 +120,25 @@ extern int	r_comp_contrast;	///< contrast enhancement coefficient
 	#endif
 #endif
 
-/// Short-hand for OpenGL call grouping: begin event.
-#define OPENGL_EVENT_BEGIN(id, name)										\
-	if (GLEW_KHR_debug)														\
-		glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, id, -1, name)
-/// Short-hand for OpenGL call grouping: end event.
-#define OPENGL_EVENT_END();													\
-	if (GLEW_KHR_debug)														\
-		glPopDebugGroup()
-/// Short-hand for one-off OpenGL event string marker.
-#define OPENGL_EVENT(id, str)												\
-	if (GLEW_KHR_debug)														\
-		glDebugMessageInsert(GL_DEBUG_SOURCE_APPLICATION,					\
-			GL_DEBUG_TYPE_OTHER, id, GL_DEBUG_SEVERITY_LOW, -1, str)
+#if OPENGL_DEBUG
+    /// Short-hand for OpenGL call grouping: begin event.
+	#define OPENGL_EVENT_BEGIN(id, name)									\
+		if (GLEW_KHR_debug)													\
+			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, id, -1, name)
+    /// Short-hand for OpenGL call grouping: end event.
+	#define OPENGL_EVENT_END()												\
+		if (GLEW_KHR_debug)													\
+			glPopDebugGroup()
+    /// Short-hand for one-off OpenGL event string marker.
+	#define OPENGL_EVENT(id, str)											\
+		if (GLEW_KHR_debug)													\
+			glDebugMessageInsert(GL_DEBUG_SOURCE_APPLICATION,				\
+				GL_DEBUG_TYPE_OTHER, id, GL_DEBUG_SEVERITY_LOW, -1, str)
+#else
+    #define OPENGL_EVENT_BEGIN(id, name)
+    #define OPENGL_EVENT_END()
+    #define OPENGL_EVENT(id, str)
+#endif // OPENGL_DEBUG
 
 /// @}
 

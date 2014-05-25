@@ -1,0 +1,6 @@
+*.act
+*.depend
+*.layout
+gmon.out
+bin/
+obj/

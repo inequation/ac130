@@ -5,6 +5,13 @@
 
 #include "r_local.h"
 
+#ifdef WIN32
+	#define WIN32_LEAN_AND_MEAN
+	#include <windows.h>
+#else
+	#include <signal.h>
+#endif
+
 SDL_Window	*r_screen;
 SDL_GLContext  r_context;
 
@@ -69,6 +76,16 @@ static void r_debug_callback(GLenum source, GLenum type, GLuint id,
 
 	printf("OpenGL %s severity %s message #%d from %s: %s\n",
 		severity_str, type_str, id, source_str, message);
+
+#ifndef NDEBUG
+	// break on errors
+	if (type == GL_DEBUG_TYPE_ERROR)
+	#ifdef WIN32
+		DebugBreak();
+	#else
+		raise(SIGTRAP);
+	#endif
+#endif
 }
 #endif
 

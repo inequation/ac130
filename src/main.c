@@ -7,8 +7,8 @@
 #include <time.h>
 #include "ac130.h"
 
-int m_screen_width = 1024;
-int m_screen_height = 768;
+int m_screen_width = 0;
+int m_screen_height = 0;
 bool m_full_screen = true;
 
 float m_terrain_LOD = 40.f;
@@ -30,7 +30,6 @@ static void parse_args(int argc, char *argv[]) {
 		}
 		if (!strcmp(argv[i], "-r") && i + 1 < argc) {
 			char buf[32];
-			float aspect;
 
 			strncpy(buf, argv[++i], sizeof(buf) - 1);
 			char *x = strchr(buf, 'x');
@@ -39,21 +38,6 @@ static void parse_args(int argc, char *argv[]) {
 			*x++ = 0;
 			m_screen_width = atoi(buf);
 			m_screen_height = atoi(x);
-			// sanitize the values
-			if (m_screen_width <= 0)
-				m_screen_width = 1024;
-			if (m_screen_height <= 0)
-				m_screen_height = 768;
-			// enforce a 4:3 or 5:4 aspect ratio
-			aspect = (float)m_screen_width / (float)m_screen_height;
-			if (fabs(aspect - 4.f / 3.f) > 0.01
-				&& fabs(aspect - 5.f / 4.f) > 0.01) {
-				// OK, this aspect isn't right, shrink the window to get 4:3
-				if (aspect > 1.334)
-					m_screen_width = 1.33 * m_screen_height;
-				else
-					m_screen_height = 0.75 * m_screen_width;
-			}
 		}
 		if (!strcmp(argv[i], "-noaa")) {
 			m_FSAA = false;

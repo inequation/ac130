@@ -6,7 +6,7 @@
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
 		<Build>
-			<Target title="Unix Debug">
+			<Target title="Unix Debug 32">
 				<Option platforms="Unix;Mac;" />
 				<Option output="bin/Debug/ac130" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug/" />
@@ -25,6 +25,7 @@
 					<Add option="-Wall" />
 					<Add option="-pg" />
 					<Add option="-g" />
+					<Add option="-m32" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -33,18 +34,67 @@
 					<Add library="SDL2" />
 				</Linker>
 			</Target>
-			<Target title="Unix Release">
+			<Target title="Unix Release 32">
 				<Option platforms="Unix;Mac;" />
 				<Option output="bin/Release/ac130" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Release/" />
-				<Option type="0" />
+				<Option type="1" />
 				<Option compiler="gcc" />
 				<Option parameters="-r 1280x1024" />
 				<Compiler>
 					<Add option="-march=athlon-4" />
 					<Add option="-march=pentium3" />
 					<Add option="-fomit-frame-pointer" />
-					<Add option="-O2" />
+					<Add option="-O3" />
+					<Add option="-m32" />
+					<Add option="-DNDEBUG" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add library="GLEW" />
+					<Add library="GL" />
+					<Add library="SDL2" />
+				</Linker>
+			</Target>
+			<Target title="Unix Debug 64">
+				<Option platforms="Unix;Mac;" />
+				<Option output="bin/Debug/ac130" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Option parameters="-w -r 640x480 -noaa -c -t 5" />
+				<Compiler>
+					<Add option="-Wshadow" />
+					<Add option="-Winit-self" />
+					<Add option="-Wredundant-decls" />
+					<Add option="-Wcast-align" />
+					<Add option="-Wundef" />
+					<Add option="-Winline" />
+					<Add option="-Wunreachable-code" />
+					<Add option="-Wextra" />
+					<Add option="-Wall" />
+					<Add option="-pg" />
+					<Add option="-g" />
+					<Add option="-m64 -msse -msse2" />
+				</Compiler>
+				<Linker>
+					<Add option="-pg" />
+					<Add library="GLEW" />
+					<Add library="GL" />
+					<Add library="SDL2" />
+				</Linker>
+			</Target>
+			<Target title="Unix Release 64">
+				<Option platforms="Unix;Mac;" />
+				<Option output="bin/Release/ac130" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Option parameters="-r 1280x1024" />
+				<Compiler>
+					<Add option="-fomit-frame-pointer" />
+					<Add option="-O3" />
+					<Add option="-m64 -msse -msse2" />
 					<Add option="-DNDEBUG" />
 				</Compiler>
 				<Linker>
@@ -153,14 +203,18 @@
 		</Unit>
 		<Unit filename="src/shaders/compositor_compat_fs.glsl" />
 		<Unit filename="src/shaders/compositor_fs.glsl">
-			<Option target="Unix Debug" />
-			<Option target="Unix Release" />
+			<Option target="Unix Debug 32" />
+			<Option target="Unix Release 32" />
 			<Option target="Win32 Debug" />
+			<Option target="Unix Debug 64" />
+			<Option target="Unix Release 64" />
 		</Unit>
 		<Unit filename="src/shaders/compositor_vs.glsl">
-			<Option target="Unix Debug" />
-			<Option target="Unix Release" />
+			<Option target="Unix Debug 32" />
+			<Option target="Unix Release 32" />
 			<Option target="Win32 Debug" />
+			<Option target="Unix Debug 64" />
+			<Option target="Unix Release 64" />
 		</Unit>
 		<Unit filename="src/shaders/font_fs.glsl" />
 		<Unit filename="src/shaders/footmobile_vs.glsl" />

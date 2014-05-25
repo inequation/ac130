@@ -128,6 +128,14 @@ static inline bool r_create_program(const char *id, const char *vss,
 		return false;
 	}
 
+#if OPENGL_DEBUG
+	if (GLEW_KHR_debug) {
+		glObjectLabel(GL_SHADER, *vs, -1, id);
+		glObjectLabel(GL_SHADER, *fs, -1, id);
+		glObjectLabel(GL_PROGRAM, *prog, -1, id);
+	}
+#endif
+
 	OPENGL_EVENT_END();
 
 	return true;

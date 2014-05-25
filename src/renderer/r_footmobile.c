@@ -58,6 +58,14 @@ void r_create_footmobile(void) {
 	glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
 	glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
 
+#if OPENGL_DEBUG
+	if (GLEW_KHR_debug) {
+		glObjectLabel(GL_TEXTURE, r_fmb_tex, -1, "Footmobile");
+		for (i = 0; i < sizeof(r_fmb_VBOs) / sizeof(r_fmb_VBOs[0]); ++i)
+			glObjectLabel(GL_TEXTURE, r_fmb_VBOs[i], -1, "Footmobile");
+	}
+#endif
+
 	OPENGL_EVENT_END();
 }
 

@@ -28,6 +28,11 @@ void r_create_font(void) {
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 
+#if OPENGL_DEBUG
+	if (GLEW_KHR_debug)
+		glObjectLabel(GL_TEXTURE, r_font_tex, -1, "Font");
+#endif
+
 	OPENGL_EVENT_END();
 }
 

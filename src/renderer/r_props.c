@@ -22,6 +22,9 @@ void r_create_props(void) {
 					+ BLDG_FLAT_INDICES
 					+ BLDG_SLNT_INDICES];
 	uchar		texture[PROP_TEXTURE_SIZE * PROP_TEXTURE_SIZE];
+#if OPENGL_DEBUG
+	uint		i;
+#endif
 
 	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
 
@@ -50,6 +53,14 @@ void r_create_props(void) {
 	// unbind VBOs
 	glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
 	glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
+
+#if OPENGL_DEBUG
+	if (GLEW_KHR_debug) {
+		glObjectLabel(GL_TEXTURE, r_prop_tex, -1, "Props");
+		for (i = 0; i < sizeof(r_prop_VBOs) / sizeof(r_prop_VBOs[0]); ++i)
+			glObjectLabel(GL_TEXTURE, r_prop_VBOs[i], -1, "Props");
+	}
+#endif
 
 	OPENGL_EVENT_END();
 }

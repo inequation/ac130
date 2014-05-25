@@ -27,6 +27,51 @@ uint		r_frame_tex[1 + FRAME_TRACE];	///< 0 - current frame, > 0 -
 											///< previous ones
 uint		r_current_FBO = 1;
 
+#if OPENGL_DEBUG
+static void r_debug_callback(GLenum source, GLenum type, GLuint id,
+								GLenum severity, GLsizei length,
+								const GLchar *message, GLvoid *user_param) {
+	const char *source_str = "unknown";
+	const char *type_str = "unknown";
+	const char *severity_str = "unknown";
+
+	// shut up, compiler
+	(void)length;
+	(void)user_param;
+
+	switch (source)	{
+	case GL_DEBUG_SOURCE_API:				source_str = "API"; break;
+	case GL_DEBUG_SOURCE_WINDOW_SYSTEM:		source_str = "window system"; break;
+	case GL_DEBUG_SOURCE_SHADER_COMPILER:	source_str = "shader cmplr"; break;
+	case GL_DEBUG_SOURCE_THIRD_PARTY:		source_str = "3rd party"; break;
+	case GL_DEBUG_SOURCE_APPLICATION:		source_str = "app"; break;
+	case GL_DEBUG_SOURCE_OTHER:				source_str = "other"; break;
+	}
+
+	switch (type) {
+	case GL_DEBUG_TYPE_ERROR:				type_str = "error"; break;
+	case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:	type_str = "deprecated bhvr"; break;
+	case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:	type_str = "undef bhvr"; break;
+	case GL_DEBUG_TYPE_PORTABILITY:			type_str = "portability"; break;
+	case GL_DEBUG_TYPE_PERFORMANCE:			type_str = "perf"; break;
+	case GL_DEBUG_TYPE_OTHER:				type_str = "other"; break;
+	case GL_DEBUG_TYPE_MARKER:				type_str = "marker"; break;
+	case GL_DEBUG_TYPE_PUSH_GROUP:			type_str = "group push"; break;
+	case GL_DEBUG_TYPE_POP_GROUP:			type_str = "group pop"; break;
+	}
+
+	switch (severity) {
+	case GL_DEBUG_SEVERITY_HIGH:			severity_str = "high"; break;
+	case GL_DEBUG_SEVERITY_MEDIUM:			severity_str = "medium"; break;
+	case GL_DEBUG_SEVERITY_LOW:				severity_str = "low"; break;
+	case GL_DEBUG_SEVERITY_NOTIFICATION:	severity_str = "info"; break;
+	}
+
+	printf("OpenGL %s severity %s message #%d from %s: %s\n",
+		severity_str, type_str, id, source_str, message);
+}
+#endif
+
 static void r_set_frustum(ac_vec4_t pos,
 							ac_vec4_t fwd, ac_vec4_t right, ac_vec4_t up,
 							float x, float y, float zNear, float zFar) {
@@ -143,10 +188,19 @@ static bool r_init_FBO(void) {
 	glGenTextures(1, &r_2D_tex);
 	glGenFramebuffersEXT(sizeof(r_FBOs) / sizeof(r_FBOs[0]), r_FBOs);
 	for (i = 0; i < sizeof(r_FBOs) / sizeof(r_FBOs[0]); i++) {
-		if (i == FBO_2D)
+		if (i == FBO_2D) {
+#if OPENGL_DEBUG
+			if (GLEW_KHR_debug)
+				glObjectLabel(GL_TEXTURE, r_2D_tex, -1, "2D overlay RT");
+#endif
 			glBindTexture(GL_TEXTURE_2D, r_2D_tex);
-		else
+		} else {
+#if OPENGL_DEBUG
+			if (GLEW_KHR_debug)
+				glObjectLabel(GL_TEXTURE, r_frame_tex[i - 1], -1, "Frame RT");
+#endif
 			glBindTexture(GL_TEXTURE_2D, r_frame_tex[i - 1]);
+		}
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
@@ -225,6 +279,11 @@ bool r_init(uint *vcounter, uint *tcounter,
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 4);
 
+#if OPENGL_DEBUG
+	// make it a debug context, if we want debugging
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
+#endif
+
     // attempt to find a matching visual
     for (i = 0; i < 16 && !r_screen; ++i) {
 		// try disabling FSAA on odd iterations
@@ -294,6 +353,28 @@ bool r_init(uint *vcounter, uint *tcounter,
 		fprintf(stderr, "Hardware does not support fragment shaders\n");
 		return false;
 	}
+
+#if OPENGL_DEBUG
+	// register the debug callback handler, enable verbose output and squelch
+	// all messages from the app
+	if (GLEW_KHR_debug) {
+		glDebugMessageCallback(r_debug_callback, NULL);
+#if OPENGL_DEBUG > 1
+		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0,
+			NULL, GL_TRUE);
+#endif // OPENGL_DEBUG > 1
+		glDebugMessageControl(GL_DEBUG_SOURCE_APPLICATION, GL_DONT_CARE,
+			GL_DONT_CARE, 0, NULL, GL_FALSE);
+	} else if (GLEW_ARB_debug_output) {
+		glDebugMessageCallbackARB(r_debug_callback, NULL);
+#if OPENGL_DEBUG > 1
+		glDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0,
+			NULL, GL_TRUE);
+#endif // OPENGL_DEBUG > 1
+		glDebugMessageControlARB(GL_DEBUG_SOURCE_APPLICATION_ARB, GL_DONT_CARE,
+			GL_DONT_CARE, 0, NULL, GL_FALSE);
+	}
+#endif
 
 	OPENGL_EVENT_BEGIN(0, "Initialization");
 

@@ -174,6 +174,10 @@ void r_create_terrain(void) {
 }
 
 void r_set_heightmap(void) {
+#if OPENGL_DEBUG
+	uint		i;
+#endif
+
 	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
 
 	if (gen_heightmap != NULL)
@@ -188,6 +192,14 @@ void r_set_heightmap(void) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+#if OPENGL_DEBUG
+	if (GLEW_KHR_debug) {
+		glObjectLabel(GL_TEXTURE, r_hmap_tex, -1, "Heightmap");
+		for (i = 0; i < sizeof(r_ter_VBOs) / sizeof(r_ter_VBOs[0]); ++i)
+			glObjectLabel(GL_TEXTURE, r_ter_VBOs[i], -1, "Terrain");
+	}
+#endif
 
 	OPENGL_EVENT_END();
 }

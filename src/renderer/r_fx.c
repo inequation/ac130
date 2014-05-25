@@ -13,6 +13,9 @@ void r_create_fx(void) {
 	ac_vertex_t	verts[4];
 	uchar		indices[4];
 	uchar		texture[2 * FX_TEXTURE_SIZE * FX_TEXTURE_SIZE];
+#if OPENGL_DEBUG
+	uint		i;
+#endif
 
 	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
 
@@ -41,6 +44,14 @@ void r_create_fx(void) {
 	// unbind VBOs
 	glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
 	glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
+
+#if OPENGL_DEBUG
+	if (GLEW_KHR_debug) {
+		glObjectLabel(GL_TEXTURE, r_fx_tex, -1, "FX");
+		for (i = 0; i < sizeof(r_fx_VBOs) / sizeof(r_fx_VBOs[0]); ++i)
+			glObjectLabel(GL_TEXTURE, r_fx_VBOs[i], -1, "FX");
+	}
+#endif
 
 	OPENGL_EVENT_END();
 }

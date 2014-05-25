@@ -505,7 +505,7 @@ static ac_prop_t *gen_recurse_propmap(int *numTrees, ac_tree_t *trees,
 					int *numBldgs, ac_bldg_t *bldgs, int x, int y, int step) {
 	int i;
 	float tx, tz, min, max;
-	ac_prop_t *node;
+	ac_prop_t *node = NULL; // shut up compiler
 
 	min = FLT_MAX;
 	max = -FLT_MAX;

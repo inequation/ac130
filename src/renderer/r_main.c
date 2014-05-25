@@ -212,35 +212,56 @@ static bool r_init_FBO(void) {
 
 bool r_init(uint *vcounter, uint *tcounter,
 					uint *dpcounter, uint *cpcounter) {
+	int i;
 	float fogcolour[] = {0, 0, 0, 1};
-
-	SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
-	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
-	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
-	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 0);
-	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-	if (m_FSAA) {
-		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
-	}
-
-	// stick to old GL 1.4 for now
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 4);
 
 	// we need this parameter to be squared anyway
 	m_terrain_LOD *= m_terrain_LOD;
 
-	if (!(r_screen = SDL_CreateWindow("AC-130",
-        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-        m_screen_width, m_screen_height,
-        SDL_WINDOW_OPENGL | (m_full_screen ? SDL_WINDOW_FULLSCREEN : 0)))) {
-		fprintf(stderr, "SDL_CreateWindow failed: %s\n", SDL_GetError());
+	// these GL attribs don't change regardless of matching visual search
+	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 0);
+	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+	// stick to old GL 1.4 for now
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 4);
+
+    // attempt to find a matching visual
+    for (i = 0; i < 16 && !r_screen; ++i) {
+		// try disabling FSAA on odd iterations
+		bool useFSAA = m_FSAA && (i % 2 == 0);
+		// try decreasing colour precision to 16 bits on the 2nd half
+		int colourbits = i < 8 ? 8 : 5;
+		// try decreasing depth precision by 8 bits every 2 iterations
+		int depthbits = 32 - (i % 8) / 2 * 8;
+
+		SDL_GL_SetAttribute(SDL_GL_RED_SIZE, colourbits);
+		SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, colourbits);
+		SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, colourbits);
+		SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, depthbits);
+
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, useFSAA ? 1 : 0);
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, useFSAA ? 4 : 0);
+
+		printf("Trying visual: R%dG%dB%dD%d, MSAA %s\n",
+			colourbits, colourbits, colourbits, depthbits, useFSAA ? "on" : "off");
+		if (!(r_screen = SDL_CreateWindow("AC-130",
+			SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+			m_screen_width, m_screen_height,
+			SDL_WINDOW_OPENGL | (m_full_screen ? SDL_WINDOW_FULLSCREEN : 0)))) {
+				fprintf(stderr, "SDL_CreateWindow failed: %s\n", SDL_GetError());
+		}
+	}
+
+	if (!r_screen) {
+		fprintf(stderr, "Failed to find a supported GL visual\n");
 		return false;
 	}
 
 	r_context = SDL_GL_CreateContext(r_screen);
+	if (!r_context) {
+		fprintf(stderr, "Failed to initialize the GL context\n");
+		return false;
+	}
 
 	if (!vcounter || !tcounter || !dpcounter || !cpcounter)
 		return false;

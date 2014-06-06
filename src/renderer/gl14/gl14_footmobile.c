@@ -3,21 +3,21 @@
 
 // Ground troops drawing engine
 
-#include "r_local.h"
+#include "gl14_local.h"
 
 // embed font texture
 #define STRINGIFY(A)  #A
-#include "../footmobile.h"
+#include "../../footmobile.h"
 
-uint		r_fmb_tex;
-uint		r_fmb_VBOs[2];
+uint		gl14_fmb_tex;
+uint		gl14_fmb_VBOs[2];
 
-void r_create_footmobile(void) {
+void gl14_create_footmobile(void) {
 	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
 
 	// generate texture
-	glGenTextures(1, &r_fmb_tex);
-	glBindTexture(GL_TEXTURE_2D, r_fmb_tex);
+	glGenTextures(1, &gl14_fmb_tex);
+	glBindTexture(GL_TEXTURE_2D, gl14_fmb_tex);
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE8,
 				FOOTMOBILE_WIDTH, FOOTMOBILE_HEIGHT, 0,
@@ -47,9 +47,9 @@ void r_create_footmobile(void) {
 	}
 
 	// generate VBOs
-	glGenBuffersARB(2, r_fmb_VBOs);
-	glBindBufferARB(GL_ARRAY_BUFFER_ARB, r_fmb_VBOs[0]);
-	glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, r_fmb_VBOs[1]);
+	glGenBuffersARB(2, gl14_fmb_VBOs);
+	glBindBufferARB(GL_ARRAY_BUFFER_ARB, gl14_fmb_VBOs[0]);
+	glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, gl14_fmb_VBOs[1]);
 	glBufferDataARB(GL_ARRAY_BUFFER_ARB,
 		sizeof(verts), verts, GL_STATIC_DRAW_ARB);
 	glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB,
@@ -60,36 +60,36 @@ void r_create_footmobile(void) {
 
 #if OPENGL_DEBUG
 	if (GLEW_KHR_debug) {
-		glObjectLabel(GL_TEXTURE, r_fmb_tex, -1, "Footmobile");
-		for (i = 0; i < sizeof(r_fmb_VBOs) / sizeof(r_fmb_VBOs[0]); ++i)
-			glObjectLabel(GL_BUFFER, r_fmb_VBOs[i], -1, "Footmobile");
+		glObjectLabel(GL_TEXTURE, gl14_fmb_tex, -1, "Footmobile");
+		for (i = 0; i < sizeof(gl14_fmb_VBOs) / sizeof(gl14_fmb_VBOs[0]); ++i)
+			glObjectLabel(GL_BUFFER, gl14_fmb_VBOs[i], -1, "Footmobile");
 	}
 #endif
 
 	OPENGL_EVENT_END();
 }
 
-void r_start_footmobiles(void) {
+void gl14_start_footmobiles(void) {
 	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
 
 	// make the necessary state changes
-	glBindTexture(GL_TEXTURE_2D, r_fmb_tex);
+	glBindTexture(GL_TEXTURE_2D, gl14_fmb_tex);
 	glDisable(GL_CULL_FACE);
 	glEnable(GL_BLEND);
 	// disable writing to the depth buffer to get rid of the ugly artifacts
 	glDepthMask(GL_FALSE);
-	glBindBufferARB(GL_ARRAY_BUFFER_ARB, r_fmb_VBOs[0]);
-	glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, r_fmb_VBOs[1]);
+	glBindBufferARB(GL_ARRAY_BUFFER_ARB, gl14_fmb_VBOs[0]);
+	glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, gl14_fmb_VBOs[1]);
 	glVertexPointer(3, GL_FLOAT, sizeof(ac_vertex_t),
 					(void *)offsetof(ac_vertex_t, pos.f[0]));
 	glTexCoordPointer(2, GL_FLOAT, sizeof(ac_vertex_t),
 					(void *)offsetof(ac_vertex_t, st[0]));
-	glUseProgramObjectARB(r_fmb_prog);
+	glUseProgramObjectARB(gl14_fmb_prog);
 
 	OPENGL_EVENT_END();
 }
 
-void r_draw_squad(ac_footmobile_t *squad, size_t troops) {
+void gl14_draw_squad(ac_footmobile_t *squad, size_t troops) {
 	size_t i;
 
 	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
@@ -99,14 +99,14 @@ void r_draw_squad(ac_footmobile_t *squad, size_t troops) {
 		glMultiTexCoord3f(GL_TEXTURE2,
 			squad->stance == STANCE_STAND ? 0.f : 0.5, 0.f, squad->ang);
 		glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_BYTE, (void *)0);
-		*r_vert_counter += 4;
-		*r_tri_counter += 2;
+		*gl14_vert_counter += 4;
+		*gl14_tri_counter += 2;
 	}
 
 	OPENGL_EVENT_END();
 }
 
-void r_finish_footmobiles(void) {
+void gl14_finish_footmobiles(void) {
 	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
 
 	// bring the previous state back
@@ -122,11 +122,11 @@ void r_finish_footmobiles(void) {
 	OPENGL_EVENT_END();
 }
 
-void r_destroy_footmobile(void) {
+void gl14_destroy_footmobile(void) {
 	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
 
-	glDeleteBuffersARB(2, r_fmb_VBOs);
-	glDeleteTextures(1, &r_fmb_tex);
+	glDeleteBuffersARB(2, gl14_fmb_VBOs);
+	glDeleteTextures(1, &gl14_fmb_tex);
 
 	OPENGL_EVENT_END();
 }

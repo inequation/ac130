@@ -1,9 +1,9 @@
 // AC-130 shooter
 // Written by Leszek Godlewski <leszgod081@student.polsl.pl>
 
-// Main renderer module
+// Main GL 1.4 renderer module
 
-#include "r_local.h"
+#include "gl14_local.h"
 
 #ifdef WIN32
 	#define WIN32_LEAN_AND_MEAN
@@ -12,30 +12,30 @@
 	#include <signal.h>
 #endif
 
-SDL_Window	*r_screen;
-SDL_GLContext  r_context;
+extern SDL_Window	*r_screen;
+SDL_GLContext  gl14_context;
 
 // counters for measuring performance
-uint		*r_tri_counter;
-uint		*r_vert_counter;
-uint		*r_visible_patch_counter;
-uint		*r_culled_patch_counter;
+uint		*gl14_tri_counter;
+uint		*gl14_vert_counter;
+uint		*gl14_visible_patch_counter;
+uint		*gl14_culled_patch_counter;
 
 // frustum planes
-ac_vec4_t	r_frustum[6];
+ac_vec4_t	gl14_frustum[6];
 
-ac_vec4_t	r_viewpoint;
+ac_vec4_t	gl14_viewpoint;
 
 // FBO resources
-uint		r_FBOs[2 + FRAME_TRACE];
-uint		r_depth_RBO;
-uint		r_2D_tex;
-uint		r_frame_tex[1 + FRAME_TRACE];	///< 0 - current frame, > 0 -
+uint		gl14_FBOs[2 + FRAME_TRACE];
+uint		gl14_depth_RBO;
+uint		gl14_2D_tex;
+uint		gl14_frame_tex[1 + FRAME_TRACE];	///< 0 - current frame, > 0 -
 											///< previous ones
-uint		r_current_FBO = 1;
+uint		gl14_current_FBO = 1;
 
 #if OPENGL_DEBUG
-static void r_debug_callback(GLenum source, GLenum type, GLuint id,
+static void gl14_debug_callback(GLenum source, GLenum type, GLuint id,
 								GLenum severity, GLsizei length,
 								const GLchar *message, GLvoid *user_param) {
 	const char *source_str = "unknown";
@@ -89,7 +89,7 @@ static void r_debug_callback(GLenum source, GLenum type, GLuint id,
 }
 #endif
 
-static void r_set_frustum(ac_vec4_t pos,
+static void gl14_set_frustum(ac_vec4_t pos,
 							ac_vec4_t fwd, ac_vec4_t right, ac_vec4_t up,
 							float x, float y, float zNear, float zFar) {
 	ac_vec4_t v1, v2;
@@ -101,12 +101,12 @@ static void r_set_frustum(ac_vec4_t pos,
 #endif
 
 	// near plane
-	r_frustum[0] = fwd;
-	r_frustum[0].f[3] = ac_vec_dot(fwd, pos) + zNear;
+	gl14_frustum[0] = fwd;
+	gl14_frustum[0].f[3] = ac_vec_dot(fwd, pos) + zNear;
 
 	// far plane
-	r_frustum[1] = ac_vec_mulf(fwd, -1.f);
-	r_frustum[1].f[3] = -ac_vec_dot(fwd, pos) - zFar;
+	gl14_frustum[1] = ac_vec_mulf(fwd, -1.f);
+	gl14_frustum[1].f[3] = -ac_vec_dot(fwd, pos) - zFar;
 
 	// right plane
 	// v1 = fwd * zNear + right * x + up * -y
@@ -114,47 +114,47 @@ static void r_set_frustum(ac_vec4_t pos,
 			ac_vec_add(ac_vec_mulf(right, x), ac_vec_mulf(up, -y)));
 	// v2 = p1 + up * 2y
 	v2 = ac_vec_add(v1, ac_vec_mulf(up, 2.f * y));
-	r_frustum[2] = ac_vec_normalize(ac_vec_cross(v2, v1));
-	r_frustum[2].f[3] = ac_vec_dot(r_frustum[2], ac_vec_add(v1, pos));
+	gl14_frustum[2] = ac_vec_normalize(ac_vec_cross(v2, v1));
+	gl14_frustum[2].f[3] = ac_vec_dot(gl14_frustum[2], ac_vec_add(v1, pos));
 
 	// left plane
 	// v1 -= right * 2 * x
 	v1 = ac_vec_add(v1, ac_vec_mulf(right, -2.f * x));
 	// v2 -= right * 2 * x
 	v2 = ac_vec_add(v2, ac_vec_mulf(right, -2.f * x));
-	r_frustum[3] = ac_vec_normalize(ac_vec_cross(v1, v2));
-	r_frustum[3].f[3] = ac_vec_dot(r_frustum[3], ac_vec_add(v1, pos));
+	gl14_frustum[3] = ac_vec_normalize(ac_vec_cross(v1, v2));
+	gl14_frustum[3].f[3] = ac_vec_dot(gl14_frustum[3], ac_vec_add(v1, pos));
 
 	// top plane
 	// v2 = v1 + right * 2 * x
 	v1 = ac_vec_add(v2, ac_vec_mulf(right, 2.f * x));
-	r_frustum[4] = ac_vec_normalize(ac_vec_cross(v2, v1));
-	r_frustum[4].f[3] = ac_vec_dot(r_frustum[4], ac_vec_add(v1, pos));
+	gl14_frustum[4] = ac_vec_normalize(ac_vec_cross(v2, v1));
+	gl14_frustum[4].f[3] = ac_vec_dot(gl14_frustum[4], ac_vec_add(v1, pos));
 
 	// bottom plane
 	// v1 -= up * 2 * y
 	v1 = ac_vec_add(v1, ac_vec_mulf(up, -2.f * y));
 	// v2 -= up * 2 * y
 	v2 = ac_vec_add(v2, ac_vec_mulf(up, -2.f * y));
-	r_frustum[5] = ac_vec_normalize(ac_vec_cross(v1, v2));
-	r_frustum[5].f[3] = ac_vec_dot(r_frustum[5], ac_vec_add(v1, pos));
+	gl14_frustum[5] = ac_vec_normalize(ac_vec_cross(v1, v2));
+	gl14_frustum[5].f[3] = ac_vec_dot(gl14_frustum[5], ac_vec_add(v1, pos));
 
-	assert(ac_vec_dot(r_frustum[0], r_frustum[1]) < 0.f);
-	assert(ac_vec_dot(r_frustum[2], r_frustum[3]) < 1.f);
-	assert(ac_vec_dot(r_frustum[4], r_frustum[5]) < 1.f);
+	assert(ac_vec_dot(gl14_frustum[0], gl14_frustum[1]) < 0.f);
+	assert(ac_vec_dot(gl14_frustum[2], gl14_frustum[3]) < 1.f);
+	assert(ac_vec_dot(gl14_frustum[4], gl14_frustum[5]) < 1.f);
 }
 
-bool r_cull_sphere(ac_vec4_t p, float radius) {
+bool gl14_cull_sphere(ac_vec4_t p, float radius) {
 	int i;
 	for (i = 0; i < 6; i++) {
-		if (ac_vec_dot(p, r_frustum[i]) + radius < r_frustum[i].f[3])
+		if (ac_vec_dot(p, gl14_frustum[i]) + radius < gl14_frustum[i].f[3])
 			// sphere is behind one of the planes
 			return true;
 	}
 	return false;
 }
 
-cullResult_t r_cull_bbox(ac_vec4_t bounds[2]) {
+cullResult_t gl14_cull_bbox(ac_vec4_t bounds[2]) {
 	ac_vec4_t v;
 	int i, x, y, z;
 	bool intersect = false;
@@ -162,9 +162,9 @@ cullResult_t r_cull_bbox(ac_vec4_t bounds[2]) {
 	for (i = 0; i < 6; i++) {
 		// floating point magic! extract the sign bits
 #define AS_INT(f)		(*(int *)(&(f)))
-		x = (AS_INT(r_frustum[i].f[0]) & 0x80000000) >> 31;
-		y = (AS_INT(r_frustum[i].f[1]) & 0x80000000) >> 31;
-		z = (AS_INT(r_frustum[i].f[2]) & 0x80000000) >> 31;
+		x = (AS_INT(gl14_frustum[i].f[0]) & 0x80000000) >> 31;
+		y = (AS_INT(gl14_frustum[i].f[1]) & 0x80000000) >> 31;
+		z = (AS_INT(gl14_frustum[i].f[2]) & 0x80000000) >> 31;
 #undef AS_INT
 		// test the negative far point against the plane
 		v = ac_vec_set(
@@ -172,7 +172,7 @@ cullResult_t r_cull_bbox(ac_vec4_t bounds[2]) {
 				bounds[1 - y].f[1],
 				bounds[1 - z].f[2],
 				0);
-		if (ac_vec_dot(v, r_frustum[i]) < r_frustum[i].f[3])
+		if (ac_vec_dot(v, gl14_frustum[i]) < gl14_frustum[i].f[3])
 			// negative far point behind plane -> box outside frustum
 			return CR_OUTSIDE;
 		// test the positive far point against the plane
@@ -181,42 +181,42 @@ cullResult_t r_cull_bbox(ac_vec4_t bounds[2]) {
 				bounds[y].f[1],
 				bounds[z].f[2],
 				0);
-		if (ac_vec_dot(v, r_frustum[i]) < r_frustum[i].f[3])
+		if (ac_vec_dot(v, gl14_frustum[i]) < gl14_frustum[i].f[3])
 			intersect = true;
 	}
 	return intersect ? CR_INTERSECT : CR_INSIDE;
 }
 
-static bool r_init_FBO(void) {
+static bool gl14_init_FBO(void) {
 	size_t i;
 	GLenum status;
 
 	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
 
 	// depth RBO initialization
-	glGenRenderbuffersEXT(1, &r_depth_RBO);
-	glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, r_depth_RBO);
+	glGenRenderbuffersEXT(1, &gl14_depth_RBO);
+	glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, gl14_depth_RBO);
 	glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT,
 		m_screen_width, m_screen_height);
 	glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, 0);
 
 	// set frame textures up
-	glGenTextures(sizeof(r_frame_tex) / sizeof(r_frame_tex[0]), r_frame_tex);
-	glGenTextures(1, &r_2D_tex);
-	glGenFramebuffersEXT(sizeof(r_FBOs) / sizeof(r_FBOs[0]), r_FBOs);
-	for (i = 0; i < sizeof(r_FBOs) / sizeof(r_FBOs[0]); i++) {
+	glGenTextures(sizeof(gl14_frame_tex) / sizeof(gl14_frame_tex[0]), gl14_frame_tex);
+	glGenTextures(1, &gl14_2D_tex);
+	glGenFramebuffersEXT(sizeof(gl14_FBOs) / sizeof(gl14_FBOs[0]), gl14_FBOs);
+	for (i = 0; i < sizeof(gl14_FBOs) / sizeof(gl14_FBOs[0]); i++) {
 		if (i == FBO_2D) {
 #if OPENGL_DEBUG
 			if (GLEW_KHR_debug)
-				glObjectLabel(GL_TEXTURE, r_2D_tex, -1, "2D overlay RT");
+				glObjectLabel(GL_TEXTURE, gl14_2D_tex, -1, "2D overlay RT");
 #endif
-			glBindTexture(GL_TEXTURE_2D, r_2D_tex);
+			glBindTexture(GL_TEXTURE_2D, gl14_2D_tex);
 		} else {
 #if OPENGL_DEBUG
 			if (GLEW_KHR_debug)
-				glObjectLabel(GL_TEXTURE, r_frame_tex[i - 1], -1, "Frame RT");
+				glObjectLabel(GL_TEXTURE, gl14_frame_tex[i - 1], -1, "Frame RT");
 #endif
-			glBindTexture(GL_TEXTURE_2D, r_frame_tex[i - 1]);
+			glBindTexture(GL_TEXTURE_2D, gl14_frame_tex[i - 1]);
 		}
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -233,13 +233,13 @@ static bool r_init_FBO(void) {
 				m_screen_width, m_screen_height, 0, GL_RGB, GL_UNSIGNED_BYTE,
 				NULL);
 
-		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, r_FBOs[i]);
+		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, gl14_FBOs[i]);
 		// attach the texture to the colour attachment point
 		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
-			GL_TEXTURE_2D, i == FBO_2D ? r_2D_tex : r_frame_tex[i - 1], 0);
+			GL_TEXTURE_2D, i == FBO_2D ? gl14_2D_tex : gl14_frame_tex[i - 1], 0);
 		// attach the renderbuffer to the depth attachment point
 		glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT,
-			GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, r_depth_RBO);
+			GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, gl14_depth_RBO);
 
 		// check FBO status
 		status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
@@ -281,7 +281,7 @@ static bool r_init_FBO(void) {
 	return true;
 }
 
-bool r_init(uint *vcounter, uint *tcounter,
+bool gl14_init(uint *vcounter, uint *tcounter,
 					uint *dpcounter, uint *cpcounter) {
 	int i;
 	float fogcolour[] = {0, 0, 0, 1};
@@ -343,8 +343,8 @@ bool r_init(uint *vcounter, uint *tcounter,
 		return false;
 	}
 
-	r_context = SDL_GL_CreateContext(r_screen);
-	if (!r_context) {
+	gl14_context = SDL_GL_CreateContext(r_screen);
+	if (!gl14_context) {
 		fprintf(stderr, "Failed to initialize the GL context\n");
 		return false;
 	}
@@ -352,10 +352,10 @@ bool r_init(uint *vcounter, uint *tcounter,
 	if (!vcounter || !tcounter || !dpcounter || !cpcounter)
 		return false;
 
-	r_vert_counter = vcounter;
-	r_tri_counter = tcounter;
-	r_visible_patch_counter = dpcounter;
-	r_culled_patch_counter = cpcounter;
+	gl14_vert_counter = vcounter;
+	gl14_tri_counter = tcounter;
+	gl14_visible_patch_counter = dpcounter;
+	gl14_culled_patch_counter = cpcounter;
 
 	// initialize the extension wrangler
 	glewInit();
@@ -385,7 +385,7 @@ bool r_init(uint *vcounter, uint *tcounter,
 	// register the debug callback handler, enable verbose output and squelch
 	// all messages from the app
 	if (GLEW_KHR_debug) {
-		glDebugMessageCallback(r_debug_callback, NULL);
+		glDebugMessageCallback(gl14_debug_callback, NULL);
 #if OPENGL_DEBUG > 1
 		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0,
 			NULL, GL_TRUE);
@@ -393,7 +393,7 @@ bool r_init(uint *vcounter, uint *tcounter,
 		glDebugMessageControl(GL_DEBUG_SOURCE_APPLICATION, GL_DONT_CARE,
 			GL_DONT_CARE, 0, NULL, GL_FALSE);
 	} else if (GLEW_ARB_debug_output) {
-		glDebugMessageCallbackARB(r_debug_callback, NULL);
+		glDebugMessageCallbackARB(gl14_debug_callback, NULL);
 #if OPENGL_DEBUG > 1
 		glDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0,
 			NULL, GL_TRUE);
@@ -430,51 +430,51 @@ bool r_init(uint *vcounter, uint *tcounter,
 	glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 
 	// initialize FBO
-	if (!r_init_FBO())
+	if (!gl14_init_FBO())
 		return false;
 
 	// initialize shaders
-	if (!r_create_shaders())
+	if (!gl14_create_shaders())
 		return false;
 
 	// generate resources
-	r_create_terrain();
-	r_create_props();
-	r_create_fx();
-	r_create_font();
-	r_create_footmobile();
+	gl14_create_terrain();
+	gl14_create_props();
+	gl14_create_fx();
+	gl14_create_font();
+	gl14_create_footmobile();
 
 	OPENGL_EVENT_END();
 
 	return true;
 }
 
-void r_shutdown(void) {
+void gl14_shutdown(void) {
 	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
 
-	r_destroy_footmobile();
-	r_destroy_font();
-	r_destroy_fx();
-	r_destroy_props();
-	r_destroy_terrain();
-	r_destroy_shaders();
+	gl14_destroy_footmobile();
+	gl14_destroy_font();
+	gl14_destroy_fx();
+	gl14_destroy_props();
+	gl14_destroy_terrain();
+	gl14_destroy_shaders();
 
-	glDeleteFramebuffersEXT(sizeof(r_FBOs) / sizeof(r_FBOs[0]), r_FBOs);
-	glDeleteRenderbuffersEXT(1, &r_depth_RBO);
+	glDeleteFramebuffersEXT(sizeof(gl14_FBOs) / sizeof(gl14_FBOs[0]), gl14_FBOs);
+	glDeleteRenderbuffersEXT(1, &gl14_depth_RBO);
 
-	glDeleteTextures(sizeof(r_frame_tex) / sizeof(r_frame_tex[0]), r_frame_tex);
-	glDeleteTextures(1, &r_2D_tex);
+	glDeleteTextures(sizeof(gl14_frame_tex) / sizeof(gl14_frame_tex[0]), gl14_frame_tex);
+	glDeleteTextures(1, &gl14_2D_tex);
 
 	OPENGL_EVENT_END();
 
-	SDL_GL_DeleteContext(r_context);
+	SDL_GL_DeleteContext(gl14_context);
 	SDL_DestroyWindow(r_screen);
 
 	// close SDL down
 	SDL_QuitSubSystem(SDL_INIT_VIDEO);	// FIXME: this shuts input down as well
 }
 
-void r_start_scene(int time, ac_viewpoint_t *vp) {
+void gl14_start_scene(int time, ac_viewpoint_t *vp) {
 	static int lastTime = 0;
 	static GLmatrix_t m = {
 		1, 0, 0, 0,	// 0
@@ -491,15 +491,15 @@ void r_start_scene(int time, ac_viewpoint_t *vp) {
 
 	// scroll the FBO every 27 ms
 	if (time - lastTime >= 27) {
-		r_current_FBO = (r_current_FBO + 1)
-			% (sizeof(r_FBOs) / sizeof(r_FBOs[0]));
-		if (r_current_FBO == FBO_2D)
-			r_current_FBO++;
+		gl14_current_FBO = (gl14_current_FBO + 1)
+			% (sizeof(gl14_FBOs) / sizeof(gl14_FBOs[0]));
+		if (gl14_current_FBO == FBO_2D)
+			gl14_current_FBO++;
 		lastTime = time;
 	}
 
 	// activate FBO
-	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, r_FBOs[r_current_FBO]);
+	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, gl14_FBOs[gl14_current_FBO]);
 
 	// clear buffers
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -513,7 +513,7 @@ void r_start_scene(int time, ac_viewpoint_t *vp) {
 	glEnable(GL_FOG);
 	glEnable(GL_CULL_FACE);
 
-	r_viewpoint = vp->origin;
+	gl14_viewpoint = vp->origin;
 
 	// set up the GL projection matrix
 	glMatrixMode(GL_PROJECTION);
@@ -561,24 +561,24 @@ void r_start_scene(int time, ac_viewpoint_t *vp) {
 	fwd = ac_vec_set(-m[2], -m[6], -m[10], 0);
 	right = ac_vec_set(m[0], m[4], m[8], 0);
 	up = ac_vec_set(m[1], m[5], m[9], 0);
-	r_set_frustum(vp->origin, fwd, right, up, x, y, zNear, zFar);
+	gl14_set_frustum(vp->origin, fwd, right, up, x, y, zNear, zFar);
 
 	// draw terrain
-	r_draw_terrain();
+	gl14_draw_terrain();
 
 	// draw props
-	r_draw_props();
+	gl14_draw_props();
 
 	glDisable(GL_FOG);
 
 	OPENGL_EVENT_END();
 }
 
-void r_finish_3D(void) {
+void gl14_finish_3D(void) {
 	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
 
 	// switch to the 2D FBO
-	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, r_FBOs[FBO_2D]);
+	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, gl14_FBOs[FBO_2D]);
 
 	glClear(GL_COLOR_BUFFER_BIT);
 
@@ -600,7 +600,7 @@ void r_finish_3D(void) {
 	OPENGL_EVENT_END();
 }
 
-void r_finish_2D(void) {
+void gl14_finish_2D(void) {
 	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
 
 	glDisable(GL_BLEND);
@@ -616,25 +616,25 @@ void r_finish_2D(void) {
 	OPENGL_EVENT_END();
 }
 
-void r_composite(float negative, float contrast) {
+void gl14_composite(float negative, float contrast) {
 	int i;
 
 	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
 
 	glClear(GL_COLOR_BUFFER_BIT);
-	glUseProgramObjectARB(r_comp_prog);
-	glUniform1fARB(r_comp_neg, negative);
-	glUniform1fARB(r_comp_contrast, contrast);
+	glUseProgramObjectARB(gl14_comp_prog);
+	glUniform1fARB(gl14_comp_neg, negative);
+	glUniform1fARB(gl14_comp_contrast, contrast);
 
 	glActiveTextureARB(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, r_2D_tex);
+	glBindTexture(GL_TEXTURE_2D, gl14_2D_tex);
 	// mind you that the frame texture #0 is attached to FBO #1
 	//printf("Frames: ");
 	for (i = 0; i < 1 + FRAME_TRACE; i++) {
 		glActiveTextureARB(GL_TEXTURE1 + i);
-		glBindTexture(GL_TEXTURE_2D, r_frame_tex[(r_current_FBO - 1 + i)
+		glBindTexture(GL_TEXTURE_2D, gl14_frame_tex[(gl14_current_FBO - 1 + i)
 						% (1 + FRAME_TRACE)]);
-		//printf("%d=%d ", i, (r_currentFBO - 1 + i) % (1 + FRAME_TRACE));
+		//printf("%d=%d ", i, (gl14_currentFBO - 1 + i) % (1 + FRAME_TRACE));
 	}
 	//printf("\n");
 	glActiveTextureARB(GL_TEXTURE0);

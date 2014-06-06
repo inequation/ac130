@@ -3,20 +3,20 @@
 
 // 2D drawing module
 
-#include "r_local.h"
+#include "gl14_local.h"
 
 // embed font texture
 #define STRINGIFY(A)  #A
-#include "../font.h"
+#include "../../font.h"
 
-uint		r_font_tex;
+uint		gl14_font_tex;
 
-void r_create_font(void) {
+void gl14_create_font(void) {
 	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
 
 	// generate texture
-	glGenTextures(1, &r_font_tex);
-	glBindTexture(GL_TEXTURE_2D, r_font_tex);
+	glGenTextures(1, &gl14_font_tex);
+	glBindTexture(GL_TEXTURE_2D, gl14_font_tex);
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE8,
 				FONT_WIDTH, FONT_HEIGHT, 0,
@@ -30,7 +30,7 @@ void r_create_font(void) {
 
 #if OPENGL_DEBUG
 	if (GLEW_KHR_debug)
-		glObjectLabel(GL_TEXTURE, r_font_tex, -1, "Font");
+		glObjectLabel(GL_TEXTURE, gl14_font_tex, -1, "Font");
 #endif
 
 	OPENGL_EVENT_END();
@@ -38,7 +38,7 @@ void r_create_font(void) {
 
 #define GLYPH_W	(float)FONT_WIDTH / 13.f
 #define GLYPH_H	(float)FONT_WIDTH / 13.f * (128.f / 75.f)
-void r_draw_string(char *str, float ox, float oy, float scale) {
+void gl14_draw_string(char *str, float ox, float oy, float scale) {
 	static const float glyph_tw = GLYPH_W / (float)FONT_WIDTH;
 	static const float glyph_th = GLYPH_H / (float)FONT_HEIGHT;
 	// the glyph screen sizes should always be proportional to the 1024x768
@@ -64,8 +64,8 @@ void r_draw_string(char *str, float ox, float oy, float scale) {
 		revord = true;
 	}
 
-	glBindTexture(GL_TEXTURE_2D, r_font_tex);
-	glUseProgramObjectARB(r_font_prog);
+	glBindTexture(GL_TEXTURE_2D, gl14_font_tex);
+	glUseProgramObjectARB(gl14_font_prog);
 	glBegin(GL_QUADS);
 
 #define LOOP_BODY(ptr)								\
@@ -111,7 +111,7 @@ void r_draw_string(char *str, float ox, float oy, float scale) {
 	OPENGL_EVENT_END();
 }
 
-void r_draw_lines(float pts[][2], uint num_pts, float width) {
+void gl14_draw_lines(float pts[][2], uint num_pts, float width) {
 	uint i;
 
 	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
@@ -127,10 +127,10 @@ void r_draw_lines(float pts[][2], uint num_pts, float width) {
 	OPENGL_EVENT_END();
 }
 
-void r_destroy_font(void) {
+void gl14_destroy_font(void) {
 	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
 
-	glDeleteTextures(1, &r_font_tex);
+	glDeleteTextures(1, &gl14_font_tex);
 
 	OPENGL_EVENT_END();
 }

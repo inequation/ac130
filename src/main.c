@@ -108,6 +108,7 @@ int main (int argc, char *argv[]) {
 	SDL_GameController	*controller;
 	SDL_Haptic			*rumbler;
 	Sint16		controllerAxes[SDL_CONTROLLER_AXIS_MAX] = {0};
+	char		*rendererName;
 
 	parse_args(argc, argv);
 
@@ -119,10 +120,22 @@ int main (int argc, char *argv[]) {
 	}
 
 	// initialize renderer
-	if (!r_init(&vertCount, &triCount, &dpCount, &cpCount)) {
-		fprintf(stderr, "Unable to init renderer\n");
+	done = false;
+	for (index = 0; !done && index < 2; ++index) {
+		switch (index) {
+			case 0: r_setup_azdo(); rendererName = "azdo"; break;
+			case 1: r_setup_gl14(); rendererName = "gl14"; break;
+		}
+
+		done = r_init(&vertCount, &triCount, &dpCount, &cpCount);
+		printf("Initializing renderer %s: %s\n", rendererName,
+			done ? "OK" : "failed");
+	}
+	if (!done) {
+		fprintf(stderr, "Unable to init any renderer\n");
 		return 1;
 	}
+
 	extern SDL_Window	*r_screen;
 
 	// initialize the system random number generator

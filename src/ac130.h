@@ -223,34 +223,44 @@ void gen_free_proptree(ac_prop_t *n);
 
 /// @{
 
+/// \brief Sets up the OpenGL 1.4 renderer.
+/// \note	Needs to be called before r_init.
+/// \sa r_setup_azdo
+void r_setup_gl14();
+
+/// \brief Sets up the AZDO ("modern" OpenGL 4.x) renderer.
+/// \note	Needs to be called before r_init.
+/// \sa r_setup_gl14
+void r_setup_azdo();
+
 /// \brief Initializes the renderer.
 /// \param vcounter		vertex counter address (for performance measurement)
 /// \param tcounter		triangle counter address (for performance measurement)
 /// \param dpcounter	displayed terrain patch counter address
 /// \param cpcounter	culled terrain patch counter address
 /// \return				true on success
-bool r_init(uint *vcounter, uint *tcounter,
+extern bool (*r_init)(uint *vcounter, uint *tcounter,
 					uint *dpcounter, uint *cpcounter);
 
 /// \brief Shuts the renderer down.
-void r_shutdown(void);
+extern void (*r_shutdown)(void);
 
 /// \brief Sets new terrain heightmap.
-void r_set_heightmap();
+extern void (*r_set_heightmap)();
 
 /// \brief Starts the rendering of a new frame. Also sets the point of view.
 /// \note				Must be called *before* \ref r_finish_3D
-void r_start_scene(int time, ac_viewpoint_t *vp);
+extern void (*r_start_scene)(int time, ac_viewpoint_t *vp);
 
 /// \brief Starts the FX rendering stage.
 /// Makes the necessary state changes, etc.
 /// \sa r_finish_fx
-void r_start_fx(void);
+extern void (*r_start_fx)(void);
 
 /// \brief Finishes the FX rendering stage.
 /// Makes the necessary state changes, etc.
 /// \sa r_start_fx
-void r_finish_fx(void);
+extern void (*r_finish_fx)(void);
 
 /// \brief Draws a smoke particle.
 /// Draws a smoke particle at the given position with the given scale and alpha.
@@ -258,7 +268,7 @@ void r_finish_fx(void);
 /// \param scale		scale of the particle
 /// \param alpha		alpha (transparency) value of the particle
 /// \param angle		angle by which to rotate the particle
-void r_draw_fx(ac_vec4_t pos, float scale, float alpha, float angle);
+extern void (*r_draw_fx)(ac_vec4_t pos, float scale, float alpha, float angle);
 
 /// \brief Draws a bullet tracer at the given position in the given direction.
 /// \note				Must be called *after* \ref r_start_fx and
@@ -266,22 +276,22 @@ void r_draw_fx(ac_vec4_t pos, float scale, float alpha, float angle);
 /// \param pos			position of the tracer
 /// \param dir			tracer's direction
 /// \param scale		scale of the tracer (length in metres, width in pixels)
-void r_draw_tracer(ac_vec4_t pos, ac_vec4_t dir, float scale);
+extern void (*r_draw_tracer)(ac_vec4_t pos, ac_vec4_t dir, float scale);
 
 /// \brief Starts the footmobile rendering stage.
 /// Makes the necessary state changes, etc.
 /// \sa r_finish_footmobiles
-void r_start_footmobiles(void);
+extern void (*r_start_footmobiles)(void);
 
 /// \brief Starts the footmobile rendering stage.
 /// Makes the necessary state changes, etc.
 /// \sa r_start_footmobiles
-void r_finish_footmobiles(void);
+extern void (*r_finish_footmobiles)(void);
 
 /// \brief Draws a footmobile squad of the given size.
 /// \param squad		pointer to a footmobile array
 /// \param troops		number of soldiers in the squad
-void r_draw_squad(ac_footmobile_t *squad, size_t troops);
+extern void (*r_draw_squad)(ac_footmobile_t *squad, size_t troops);
 
 /// \brief Draws a string at given normalized coordinates in given scale.
 /// Coordinates must fall in the [0..1] range. The text will be top-left-
@@ -296,7 +306,7 @@ void r_draw_squad(ac_footmobile_t *squad, size_t troops);
 /// \param ox			X coordinate of the text origin
 /// \param oy			Y coordinate of the text origin
 /// \param scale		scale of the text
-void r_draw_string(char *str, float ox, float oy, float scale);
+extern void (*r_draw_string)(char *str, float ox, float oy, float scale);
 
 /// \brief Draws a set of line segments.
 /// Coordinates must be normalized (in the [0..1] range).
@@ -304,19 +314,19 @@ void r_draw_string(char *str, float ox, float oy, float scale);
 ///						coordinates
 /// \param num_pts		number of points in the array
 /// \param width		desired width of the line segments in pixels
-void r_draw_lines(float pts[][2], uint num_pts, float width);
+extern void (*r_draw_lines)(float pts[][2], uint num_pts, float width);
 
 /// \brief Finishes the 3D rendering stage.
 /// Flushes the scene to the render target and switches to the 2D (HUD) stage.
 /// \note				Must be called *after* \ref r_start_scene and
 ///						*before* \ref r_finish_2D
-void r_finish_3D(void);
+extern void (*r_finish_3D)(void);
 
 /// \brief Finishes the 2D rendering stage.
 /// Flushes the 2D (HUD) elements to the render target.
 /// \note				Must be called *after* \ref r_finish_3D and
 ///						*before* \ref r_composite
-void r_finish_2D(void);
+extern void (*r_finish_2D)(void);
 
 /// \brief Combines the 3D and 2D parts of the scene.
 /// Also runs post-processing effects and outputs the result frame to screen.
@@ -324,7 +334,7 @@ void r_finish_2D(void);
 ///						positive-negative transitions)
 /// \param contrast		fraction of contrast enhancement (for more prominent
 ///						M102 explosions)
-void r_composite(float negative, float contrast);
+extern void (*r_composite)(float negative, float contrast);
 
 /// @}
 

@@ -3,14 +3,14 @@
 
 // Prop drawing engine
 
-#include "r_local.h"
+#include "gl14_local.h"
 
 #define PROP_LOD_DISTANCE	250.f
 
-uint		r_prop_tex;
-uint		r_prop_VBOs[2];
+uint		gl14_prop_tex;
+uint		gl14_prop_VBOs[2];
 
-void r_create_props(void) {
+void gl14_create_props(void) {
 	ac_vertex_t	verts[TREE_BASE + 1		// LOD 0
 					+ TREE_BASE - 2		// LOD 1
 					+ TREE_BASE - 4		// LOD 2
@@ -31,8 +31,8 @@ void r_create_props(void) {
 	gen_props(texture, verts, indices);
 
 	// generate texture
-	glGenTextures(1, &r_prop_tex);
-	glBindTexture(GL_TEXTURE_2D, r_prop_tex);
+	glGenTextures(1, &gl14_prop_tex);
+	glBindTexture(GL_TEXTURE_2D, gl14_prop_tex);
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE8,
 				PROP_TEXTURE_SIZE, PROP_TEXTURE_SIZE, 0,
@@ -43,9 +43,9 @@ void r_create_props(void) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
 	// generate VBOs
-	glGenBuffersARB(2, r_prop_VBOs);
-	glBindBufferARB(GL_ARRAY_BUFFER_ARB, r_prop_VBOs[0]);
-	glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, r_prop_VBOs[1]);
+	glGenBuffersARB(2, gl14_prop_VBOs);
+	glBindBufferARB(GL_ARRAY_BUFFER_ARB, gl14_prop_VBOs[0]);
+	glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, gl14_prop_VBOs[1]);
 	glBufferDataARB(GL_ARRAY_BUFFER_ARB,
 		sizeof(verts), verts, GL_STATIC_DRAW_ARB);
 	glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB,
@@ -56,16 +56,16 @@ void r_create_props(void) {
 
 #if OPENGL_DEBUG
 	if (GLEW_KHR_debug) {
-		glObjectLabel(GL_TEXTURE, r_prop_tex, -1, "Props");
-		for (i = 0; i < sizeof(r_prop_VBOs) / sizeof(r_prop_VBOs[0]); ++i)
-			glObjectLabel(GL_BUFFER, r_prop_VBOs[i], -1, "Props");
+		glObjectLabel(GL_TEXTURE, gl14_prop_tex, -1, "Props");
+		for (i = 0; i < sizeof(gl14_prop_VBOs) / sizeof(gl14_prop_VBOs[0]); ++i)
+			glObjectLabel(GL_BUFFER, gl14_prop_VBOs[i], -1, "Props");
 	}
 #endif
 
 	OPENGL_EVENT_END();
 }
 
-static void r_recurse_proptree_drawall(ac_prop_t *node) {
+static void gl14_recurse_proptree_drawall(ac_prop_t *node) {
 	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
 
 	if (node->trees) {
@@ -76,7 +76,7 @@ static void r_recurse_proptree_drawall(ac_prop_t *node) {
 		// pick level of detail
 		ac_vec4_t l = ac_vec_mulf(
 			ac_vec_add(node->bounds[0], node->bounds[1]), 0.5);
-		l = ac_vec_sub(l, r_viewpoint);
+		l = ac_vec_sub(l, gl14_viewpoint);
 		d2 = ac_vec_dot(l, l);
 
 		if (d2 < PROP_LOD_DISTANCE * PROP_LOD_DISTANCE) {
@@ -98,8 +98,8 @@ static void r_recurse_proptree_drawall(ac_prop_t *node) {
 				t->ang);
 
 			glDrawElements(GL_TRIANGLE_FAN, num, GL_UNSIGNED_BYTE, (void *)ofs);
-			*r_vert_counter += num - 1;
-			*r_tri_counter += num - 2;
+			*gl14_vert_counter += num - 1;
+			*gl14_tri_counter += num - 2;
 
 			OPENGL_EVENT_END();
 		}
@@ -123,15 +123,15 @@ static void r_recurse_proptree_drawall(ac_prop_t *node) {
 				glDrawElements(GL_TRIANGLE_STRIP, BLDG_SLNT_INDICES,
 					GL_UNSIGNED_BYTE, (void *)(TREE_BASE * 3
 						+ BLDG_FLAT_INDICES));
-				*r_vert_counter += BLDG_FLAT_VERTS;
-				*r_tri_counter += BLDG_FLAT_INDICES - 2;
+				*gl14_vert_counter += BLDG_FLAT_VERTS;
+				*gl14_tri_counter += BLDG_FLAT_INDICES - 2;
 			} else {
 				OPENGL_EVENT(0, "Flat roof");
 
 				glDrawElements(GL_TRIANGLE_STRIP, BLDG_FLAT_INDICES,
 					GL_UNSIGNED_BYTE, (void *)(TREE_BASE * 3));
-				*r_vert_counter += BLDG_SLNT_VERTS;
-				*r_tri_counter += BLDG_SLNT_INDICES - 2;
+				*gl14_vert_counter += BLDG_SLNT_VERTS;
+				*gl14_tri_counter += BLDG_SLNT_INDICES - 2;
 			}
 
 			OPENGL_EVENT_END();
@@ -142,64 +142,64 @@ static void r_recurse_proptree_drawall(ac_prop_t *node) {
 		return;
 	}
 	if (node->child[0])
-		r_recurse_proptree_drawall(node->child[0]);
+		gl14_recurse_proptree_drawall(node->child[0]);
 	if (node->child[1])
-		r_recurse_proptree_drawall(node->child[1]);
+		gl14_recurse_proptree_drawall(node->child[1]);
 	if (node->child[2])
-		r_recurse_proptree_drawall(node->child[2]);
+		gl14_recurse_proptree_drawall(node->child[2]);
 	if (node->child[3])
-		r_recurse_proptree_drawall(node->child[3]);
+		gl14_recurse_proptree_drawall(node->child[3]);
 
 	OPENGL_EVENT_END();
 }
 
-static void r_recurse_proptree(ac_prop_t *node, int step) {
+static void gl14_recurse_proptree(ac_prop_t *node, int step) {
 	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
 
-	switch (r_cull_bbox(node->bounds)) {
+	switch (gl14_cull_bbox(node->bounds)) {
 		case CR_OUTSIDE:
 			OPENGL_EVENT_END();
 			return;
 		case CR_INSIDE:
 			if (node)
-				r_recurse_proptree_drawall(node);
+				gl14_recurse_proptree_drawall(node);
 			break;
 		case CR_INTERSECT:
 			if ((step >>= 1) < 2 && node) {
-				r_recurse_proptree_drawall(node);
+				gl14_recurse_proptree_drawall(node);
 
 				OPENGL_EVENT_END();
 
 				return;
 			}
 			if (node->child[0])
-				r_recurse_proptree(node->child[0], step);
+				gl14_recurse_proptree(node->child[0], step);
 			if (node->child[1])
-				r_recurse_proptree(node->child[1], step);
+				gl14_recurse_proptree(node->child[1], step);
 			if (node->child[2])
-				r_recurse_proptree(node->child[2], step);
+				gl14_recurse_proptree(node->child[2], step);
 			if (node->child[3])
-				r_recurse_proptree(node->child[3], step);
+				gl14_recurse_proptree(node->child[3], step);
 			break;
 	}
 
 	OPENGL_EVENT_END();
 }
 
-void r_draw_props(void) {
+void gl14_draw_props(void) {
 	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
 
 	// make the necessary state changes
-	glBindTexture(GL_TEXTURE_2D, r_prop_tex);
-	glBindBufferARB(GL_ARRAY_BUFFER_ARB, r_prop_VBOs[0]);
-	glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, r_prop_VBOs[1]);
+	glBindTexture(GL_TEXTURE_2D, gl14_prop_tex);
+	glBindBufferARB(GL_ARRAY_BUFFER_ARB, gl14_prop_VBOs[0]);
+	glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, gl14_prop_VBOs[1]);
 	glVertexPointer(3, GL_FLOAT, sizeof(ac_vertex_t),
 					(void *)offsetof(ac_vertex_t, pos.f[0]));
 	glTexCoordPointer(2, GL_FLOAT, sizeof(ac_vertex_t),
 					(void *)offsetof(ac_vertex_t, st[0]));
-	glUseProgramObjectARB(r_prop_prog);
+	glUseProgramObjectARB(gl14_prop_prog);
 
-	r_recurse_proptree(gen_proptree, PROPMAP_SIZE / 2);
+	gl14_recurse_proptree(gen_proptree, PROPMAP_SIZE / 2);
 
 	// bring the previous state back
 	glUseProgramObjectARB(0);
@@ -210,12 +210,12 @@ void r_draw_props(void) {
 	OPENGL_EVENT_END();
 }
 
-void r_destroy_props(void) {
+void gl14_destroy_props(void) {
 	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
 
 	gen_free_proptree(NULL);
-	glDeleteTextures(1, &r_prop_tex);
-	glDeleteBuffersARB(2, r_prop_VBOs);
+	glDeleteTextures(1, &gl14_prop_tex);
+	glDeleteBuffersARB(2, gl14_prop_VBOs);
 
 	OPENGL_EVENT_END();
 }

@@ -3,7 +3,7 @@
 
 // Terrain rendering engine
 
-#include "r_local.h"
+#include "gl14_local.h"
 
 #define TERRAIN_NUM_VERTS			(										\
 										TERRAIN_PATCH_SIZE					\
@@ -31,12 +31,12 @@
 //#define MAP_VBO
 
 // resources
-GLuint		r_hmap_tex;
-int			r_ter_max_levels;
-ac_vertex_t	r_ter_verts[TERRAIN_NUM_VERTS];
-uint		r_ter_VBOs[2];
+GLuint		gl14_hmap_tex;
+int			gl14_ter_max_levels;
+ac_vertex_t	gl14_ter_verts[TERRAIN_NUM_VERTS];
+uint		gl14_ter_VBOs[2];
 
-static void r_fill_terrain_indices(ushort *indices) {
+static void gl14_fill_terrain_indices(ushort *indices) {
 	short	i, j;	// must be signed
 	ushort	*p = indices;
 
@@ -84,7 +84,7 @@ static void r_fill_terrain_indices(ushort *indices) {
 	assert(p - indices == TERRAIN_NUM_INDICES);
 }
 
-static void r_fill_terrain_vertices(ac_vertex_t *verts) {
+static void gl14_fill_terrain_vertices(ac_vertex_t *verts) {
 	int i, j;
 	float s, t;
 	const float invScaleX = 1.f / (TERRAIN_PATCH_SIZE - 1.f);
@@ -130,34 +130,34 @@ static void r_fill_terrain_vertices(ac_vertex_t *verts) {
 	assert(v - verts == TERRAIN_NUM_VERTS);
 }
 
-static void r_calc_terrain_lodlevels(void) {
+static void gl14_calc_terrain_lodlevels(void) {
 	// calculate max LOD levels
 	int i, pow2 = (HEIGHTMAP_SIZE - 1) / (TERRAIN_PATCH_SIZE - 1);
-	r_ter_max_levels = 0;
+	gl14_ter_max_levels = 0;
 	for (i = 1; i < pow2; i *= 2)
-		r_ter_max_levels++;
+		gl14_ter_max_levels++;
 }
 
-void r_create_terrain(void) {
+void gl14_create_terrain(void) {
 	ushort		indices[TERRAIN_NUM_INDICES];
 
 	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
 
 	// signal the game from time to time
 	g_loading_tick();
-	r_fill_terrain_indices(indices);
+	gl14_fill_terrain_indices(indices);
 	g_loading_tick();
-	r_fill_terrain_vertices(r_ter_verts);
+	gl14_fill_terrain_vertices(gl14_ter_verts);
 	g_loading_tick();
-	r_calc_terrain_lodlevels();
+	gl14_calc_terrain_lodlevels();
 	g_loading_tick();
 
 	// generate VBOs
-	glGenBuffersARB(2, r_ter_VBOs);
-	glBindBufferARB(GL_ARRAY_BUFFER_ARB, r_ter_VBOs[0]);
-	glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, r_ter_VBOs[1]);
+	glGenBuffersARB(2, gl14_ter_VBOs);
+	glBindBufferARB(GL_ARRAY_BUFFER_ARB, gl14_ter_VBOs[0]);
+	glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, gl14_ter_VBOs[1]);
 	glBufferDataARB(GL_ARRAY_BUFFER_ARB,
-		sizeof(r_ter_verts), r_ter_verts,
+		sizeof(gl14_ter_verts), gl14_ter_verts,
 #ifndef UNIFORM_HEIGHTS
 		GL_DYNAMIC_DRAW_ARB
 #else
@@ -173,7 +173,7 @@ void r_create_terrain(void) {
 	OPENGL_EVENT_END();
 }
 
-void r_set_heightmap(void) {
+void gl14_set_heightmap(void) {
 #if OPENGL_DEBUG
 	uint		i;
 #endif
@@ -181,9 +181,9 @@ void r_set_heightmap(void) {
 	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
 
 	if (gen_heightmap != NULL)
-		glDeleteTextures(1, &r_hmap_tex);
-	glGenTextures(1, &r_hmap_tex);
-	glBindTexture(GL_TEXTURE_2D, r_hmap_tex);
+		glDeleteTextures(1, &gl14_hmap_tex);
+	glGenTextures(1, &gl14_hmap_tex);
+	glBindTexture(GL_TEXTURE_2D, gl14_hmap_tex);
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE8,
 				HEIGHTMAP_SIZE, HEIGHTMAP_SIZE, 0,
@@ -195,21 +195,21 @@ void r_set_heightmap(void) {
 
 #if OPENGL_DEBUG
 	if (GLEW_KHR_debug) {
-		glObjectLabel(GL_TEXTURE, r_hmap_tex, -1, "Heightmap");
-		for (i = 0; i < sizeof(r_ter_VBOs) / sizeof(r_ter_VBOs[0]); ++i)
-			glObjectLabel(GL_BUFFER, r_ter_VBOs[i], -1, "Terrain");
+		glObjectLabel(GL_TEXTURE, gl14_hmap_tex, -1, "Heightmap");
+		for (i = 0; i < sizeof(gl14_ter_VBOs) / sizeof(gl14_ter_VBOs[0]); ++i)
+			glObjectLabel(GL_BUFFER, gl14_ter_VBOs[i], -1, "Terrain");
 	}
 #endif
 
 	OPENGL_EVENT_END();
 }
 
-void r_destroy_terrain(void) {
-	glDeleteTextures(1, &r_hmap_tex);
-	glDeleteBuffersARB(2, r_ter_VBOs);
+void gl14_destroy_terrain(void) {
+	glDeleteTextures(1, &gl14_hmap_tex);
+	glDeleteBuffersARB(2, gl14_ter_VBOs);
 }
 
-static inline float r_sample_height(float s, float t) {
+static inline float gl14_sample_height(float s, float t) {
 	int x = roundf(s * (HEIGHTMAP_SIZE - 1));
 	int y = roundf(t * (HEIGHTMAP_SIZE - 1));
 	return (float)gen_heightmap[y * HEIGHTMAP_SIZE + x];
@@ -221,7 +221,7 @@ static inline float r_sample_height(float s, float t) {
 // though, which is why we have it as a toggleable option
 #define RW_TERRAIN_VBO
 #endif
-static void r_terrain_patch(float bu, float bv, float scale) {
+static void gl14_terrain_patch(float bu, float bv, float scale) {
 	int i, j;
 #if defined(UNIFORM_HEIGHTS) || (defined(MAP_VBO) && defined(RW_TERRAIN_VBO))
 	float s, t;
@@ -241,11 +241,11 @@ static void r_terrain_patch(float bu, float bv, float scale) {
 		t = /*(1.f - */i * invScaleY/*)*/ * scale;
 		for (j = 0; j < TERRAIN_PATCH_SIZE; j++) {
 			s = j * invScaleX * scale;
-			heights[i * TERRAIN_PATCH_SIZE + j] = r_sample_height(bu + s,
+			heights[i * TERRAIN_PATCH_SIZE + j] = gl14_sample_height(bu + s,
 																bv + t);
 		}
 	}
-	glUniform4fvARB(r_ter_height_samples,
+	glUniform4fvARB(gl14_ter_height_samples,
 		sizeof(heights) / (sizeof(heights[0]) * 4), heights);
 #elif defined(MAP_VBO)
 	// sample the heightmap and set vertex Y component
@@ -265,7 +265,7 @@ static void r_terrain_patch(float bu, float bv, float scale) {
 #ifndef RW_TERRAIN_VBO
 			s = j * invScaleX;
 #endif
-			v->pos.f[1] = r_sample_height(
+			v->pos.f[1] = gl14_sample_height(
 #ifdef RW_TERRAIN_VBO
 				bu + v->st[0] * scale,
 				bv + v->st[1] * scale
@@ -278,19 +278,19 @@ static void r_terrain_patch(float bu, float bv, float scale) {
 	}
 	glUnmapBufferARB(GL_ARRAY_BUFFER_ARB);
 #else // MAP_VBO
-	v = r_ter_verts;
+	v = gl14_ter_verts;
 	for (i = 0; i < TERRAIN_PATCH_SIZE; i++) {
 		for (j = 0; j < TERRAIN_PATCH_SIZE; j++, v++) {
-			v->pos.f[1] = r_sample_height(
+			v->pos.f[1] = gl14_sample_height(
 				bu + v->st[0] * scale,
 				bv + v->st[1] * scale
 			);
 		}
 	}
 	glBufferDataARB(GL_ARRAY_BUFFER_ARB,
-		sizeof(r_ter_verts), r_ter_verts, GL_STREAM_DRAW_ARB);
+		sizeof(gl14_ter_verts), gl14_ter_verts, GL_STREAM_DRAW_ARB);
 #endif
-	glUniform3fARB(r_ter_patch_params, bu, bv, scale);
+	glUniform3fARB(gl14_ter_patch_params, bu, bv, scale);
 
 	glVertexPointer(3, GL_FLOAT, sizeof(ac_vertex_t), (void *)0);
 	glTexCoordPointer(2, GL_FLOAT, sizeof(ac_vertex_t),
@@ -299,14 +299,14 @@ static void r_terrain_patch(float bu, float bv, float scale) {
 					TERRAIN_NUM_INDICES,
 					GL_UNSIGNED_SHORT,
 					(void *)0);
-	*r_vert_counter += TERRAIN_NUM_VERTS;
-	*r_tri_counter += TERRAIN_NUM_INDICES - 2;
-	(*r_visible_patch_counter)++;
+	*gl14_vert_counter += TERRAIN_NUM_VERTS;
+	*gl14_tri_counter += TERRAIN_NUM_INDICES - 2;
+	(*gl14_visible_patch_counter)++;
 
 	OPENGL_EVENT_END();
 }
 
-static void r_recurse_terrain(float minU, float minV,
+static void gl14_recurse_terrain(float minU, float minV,
 								float maxU, float maxV,
 								int level, float scale) {
 	ac_vec4_t v, bounds[2];
@@ -322,8 +322,8 @@ static void r_recurse_terrain(float minU, float minV,
 					HEIGHT,
 					(maxV - 0.5) * HEIGHTMAP_SIZE,
 					0.f);
-	if (r_cull_bbox(bounds) == CR_OUTSIDE) {
-		(*r_culled_patch_counter)++;
+	if (gl14_cull_bbox(bounds) == CR_OUTSIDE) {
+		(*gl14_culled_patch_counter)++;
 		return;
 	}
 
@@ -335,37 +335,37 @@ static void r_recurse_terrain(float minU, float minV,
 				128.f,
 				(halfV - 0.5) * (float)HEIGHTMAP_SIZE,
 				0.f);
-	v = ac_vec_sub(v, r_viewpoint);
+	v = ac_vec_sub(v, gl14_viewpoint);
 
 	// use distances squared
 	float f2 = ac_vec_dot(v, v) / d2;
 
 	if (f2 > m_terrain_LOD || level < 1)
-		r_terrain_patch(minU, minV, scale);
+		gl14_terrain_patch(minU, minV, scale);
 	else {
 		scale *= 0.5;
-		r_recurse_terrain(minU, minV, halfU, halfV, level - 1,
+		gl14_recurse_terrain(minU, minV, halfU, halfV, level - 1,
 									scale);
-		r_recurse_terrain(halfU, minV, maxU, halfV, level - 1,
+		gl14_recurse_terrain(halfU, minV, maxU, halfV, level - 1,
 									scale);
-		r_recurse_terrain(minU, halfV, halfU, maxV, level - 1,
+		gl14_recurse_terrain(minU, halfV, halfU, maxV, level - 1,
 									scale);
-		r_recurse_terrain(halfU, halfV, maxU, maxV, level - 1,
+		gl14_recurse_terrain(halfU, halfV, maxU, maxV, level - 1,
 									scale);
 	}
 }
 
-void r_draw_terrain(void) {
+void gl14_draw_terrain(void) {
 	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
 
-	glUseProgramObjectARB(r_ter_prog);
-	glBindBufferARB(GL_ARRAY_BUFFER_ARB, r_ter_VBOs[0]);
-	glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, r_ter_VBOs[1]);
-	glBindTexture(GL_TEXTURE_2D, r_hmap_tex);
+	glUseProgramObjectARB(gl14_ter_prog);
+	glBindBufferARB(GL_ARRAY_BUFFER_ARB, gl14_ter_VBOs[0]);
+	glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, gl14_ter_VBOs[1]);
+	glBindTexture(GL_TEXTURE_2D, gl14_hmap_tex);
 
 	// traverse the quadtree
-	r_recurse_terrain(0.f, 0.f, 1.f, 1.f,
-								r_ter_max_levels, 1.f);
+	gl14_recurse_terrain(0.f, 0.f, 1.f, 1.f,
+								gl14_ter_max_levels, 1.f);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);

@@ -3,13 +3,13 @@
 
 // Special effects engine
 
-#include "r_local.h"
+#include "gl14_local.h"
 
 // FX resources
-uint		r_fx_tex;
-uint		r_fx_VBOs[2];
+uint		gl14_fx_tex;
+uint		gl14_fx_VBOs[2];
 
-void r_create_fx(void) {
+void gl14_create_fx(void) {
 	ac_vertex_t	verts[4];
 	uchar		indices[4];
 	uchar		texture[2 * FX_TEXTURE_SIZE * FX_TEXTURE_SIZE];
@@ -22,8 +22,8 @@ void r_create_fx(void) {
 	gen_fx(texture, verts, indices);
 
 	// generate texture
-	glGenTextures(1, &r_fx_tex);
-	glBindTexture(GL_TEXTURE_2D, r_fx_tex);
+	glGenTextures(1, &gl14_fx_tex);
+	glBindTexture(GL_TEXTURE_2D, gl14_fx_tex);
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE8_ALPHA8,
 				FX_TEXTURE_SIZE, FX_TEXTURE_SIZE, 0,
@@ -34,9 +34,9 @@ void r_create_fx(void) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
 	// generate VBOs
-	glGenBuffersARB(2, r_fx_VBOs);
-	glBindBufferARB(GL_ARRAY_BUFFER_ARB, r_fx_VBOs[0]);
-	glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, r_fx_VBOs[1]);
+	glGenBuffersARB(2, gl14_fx_VBOs);
+	glBindBufferARB(GL_ARRAY_BUFFER_ARB, gl14_fx_VBOs[0]);
+	glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, gl14_fx_VBOs[1]);
 	glBufferDataARB(GL_ARRAY_BUFFER_ARB,
 		sizeof(verts), verts, GL_STATIC_DRAW_ARB);
 	glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB,
@@ -47,9 +47,9 @@ void r_create_fx(void) {
 
 #if OPENGL_DEBUG
 	if (GLEW_KHR_debug) {
-		glObjectLabel(GL_TEXTURE, r_fx_tex, -1, "FX");
-		for (i = 0; i < sizeof(r_fx_VBOs) / sizeof(r_fx_VBOs[0]); ++i)
-			glObjectLabel(GL_BUFFER, r_fx_VBOs[i], -1, "FX");
+		glObjectLabel(GL_TEXTURE, gl14_fx_tex, -1, "FX");
+		for (i = 0; i < sizeof(gl14_fx_VBOs) / sizeof(gl14_fx_VBOs[0]); ++i)
+			glObjectLabel(GL_BUFFER, gl14_fx_VBOs[i], -1, "FX");
 	}
 #endif
 
@@ -58,28 +58,28 @@ void r_create_fx(void) {
 
 // uncomment to restore fixed pipeline sprites
 //#define FX_FIXED_PIPELINE
-void r_start_fx(void) {
-	// not ended in this function on purpose - ended in r_finish_fx() instead
+void gl14_start_fx(void) {
+	// not ended in this function on purpose - ended in gl14_finish_fx() instead
 	// for better apitrace output
 	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
 
 	// make the necessary state changes
-	glBindTexture(GL_TEXTURE_2D, r_fx_tex);
+	glBindTexture(GL_TEXTURE_2D, gl14_fx_tex);
 	glEnable(GL_BLEND);
 	// disable writing to the depth buffer to get rid of the ugly artifacts
 	glDepthMask(GL_FALSE);
-	glBindBufferARB(GL_ARRAY_BUFFER_ARB, r_fx_VBOs[0]);
-	glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, r_fx_VBOs[1]);
+	glBindBufferARB(GL_ARRAY_BUFFER_ARB, gl14_fx_VBOs[0]);
+	glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, gl14_fx_VBOs[1]);
 	glVertexPointer(3, GL_FLOAT, sizeof(ac_vertex_t),
 					(void *)offsetof(ac_vertex_t, pos.f[0]));
 	glTexCoordPointer(2, GL_FLOAT, sizeof(ac_vertex_t),
 					(void *)offsetof(ac_vertex_t, st[0]));
 #ifndef FX_FIXED_PIPELINE
-	glUseProgramObjectARB(r_sprite_prog);
+	glUseProgramObjectARB(gl14_sprite_prog);
 #endif
 }
 
-void r_finish_fx(void) {
+void gl14_finish_fx(void) {
 	// bring the previous state back
 #ifndef FX_FIXED_PIPELINE
 	glUseProgramObjectARB(0);
@@ -97,7 +97,7 @@ void r_finish_fx(void) {
 	OPENGL_EVENT_END();
 }
 
-void r_draw_fx(ac_vec4_t pos, float scale, float alpha, float angle) {
+void gl14_draw_fx(ac_vec4_t pos, float scale, float alpha, float angle) {
 #ifdef FX_FIXED_PIPELINE
 	static GLmatrix_t m;
 	float s = sinf(angle);
@@ -129,8 +129,8 @@ void r_draw_fx(ac_vec4_t pos, float scale, float alpha, float angle) {
 #endif
 
 	glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_BYTE, (void *)0);
-	*r_vert_counter += 4;
-	*r_tri_counter += 2;
+	*gl14_vert_counter += 4;
+	*gl14_tri_counter += 2;
 
 #ifdef FX_FIXED_PIPELINE
 	glPopMatrix();
@@ -139,7 +139,7 @@ void r_draw_fx(ac_vec4_t pos, float scale, float alpha, float angle) {
 	OPENGL_EVENT_END();
 }
 
-void r_draw_tracer(ac_vec4_t pos, ac_vec4_t dir, float scale) {
+void gl14_draw_tracer(ac_vec4_t pos, ac_vec4_t dir, float scale) {
 	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
 
 	glLineWidth(scale);
@@ -153,11 +153,11 @@ void r_draw_tracer(ac_vec4_t pos, ac_vec4_t dir, float scale) {
 	OPENGL_EVENT_END();
 }
 
-void r_destroy_fx(void) {
+void gl14_destroy_fx(void) {
 	OPENGL_EVENT_BEGIN(0, __PRETTY_FUNCTION__);
 
-	glDeleteBuffersARB(2, r_fx_VBOs);
-	glDeleteTextures(1, &r_fx_tex);
+	glDeleteBuffersARB(2, gl14_fx_VBOs);
+	glDeleteTextures(1, &gl14_fx_tex);
 
 	OPENGL_EVENT_END();
 }

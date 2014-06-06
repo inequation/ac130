@@ -1,5 +1,5 @@
 // AC-130 shooter
-// Written by Leszek Godlewski <leszgod081@student.polsl.pl>
+// Written by Leszek Godlewski <github@inequation.org>
 
 #ifndef GL14_H
 #define GL14_H

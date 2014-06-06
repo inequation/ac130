@@ -1,5 +1,5 @@
 // AC-130 shooter
-// Written by Leszek Godlewski <leszgod081@student.polsl.pl>
+// Written by Leszek Godlewski <github@inequation.org>
 
 // Math module; actually, just a place where the temporary vector can be safely
 // compiled into the program

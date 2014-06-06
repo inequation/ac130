@@ -1,5 +1,5 @@
 // AC-130 shooter - rendrer module
-// Written by Leszek Godlewski <leszgod081@student.polsl.pl>
+// Written by Leszek Godlewski <github@inequation.org>
 
 // Procedural content generation module
 

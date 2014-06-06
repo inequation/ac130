@@ -1,5 +1,5 @@
 // AC-130 shooter
-// Written by Leszek Godlewski <leszgod081@student.polsl.pl>
+// Written by Leszek Godlewski <github@inequation.org>
 
 #ifndef AC_MATH_H
 #define AC_MATH_H

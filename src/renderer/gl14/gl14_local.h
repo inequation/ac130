@@ -1,5 +1,5 @@
 // AC-130 shooter
-// Written by Leszek Godlewski <leszgod081@student.polsl.pl>
+// Written by Leszek Godlewski <github@inequation.org>
 
 // Local GL 1.4 renderer header file
 

@@ -179,26 +179,35 @@
 		<Unit filename="src/main.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/renderer/r_2D.c">
+		<Unit filename="src/renderer/azdo/azdo.h" />
+		<Unit filename="src/renderer/azdo/azdo_local.h" />
+		<Unit filename="src/renderer/azdo/azdo_main.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/renderer/r_footmobile.c">
+		<Unit filename="src/renderer/gl14/gl14.h" />
+		<Unit filename="src/renderer/gl14/gl14_2D.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/renderer/r_fx.c">
+		<Unit filename="src/renderer/gl14/gl14_footmobile.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/renderer/r_local.h" />
-		<Unit filename="src/renderer/r_main.c">
+		<Unit filename="src/renderer/gl14/gl14_fx.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/renderer/r_props.c">
+		<Unit filename="src/renderer/gl14/gl14_local.h" />
+		<Unit filename="src/renderer/gl14/gl14_main.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/renderer/r_shaders.c">
+		<Unit filename="src/renderer/gl14/gl14_props.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/renderer/r_terrain.c">
+		<Unit filename="src/renderer/gl14/gl14_shaders.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/renderer/gl14/gl14_terrain.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/renderer/r_muxer.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/shaders/compositor_compat_fs.glsl" />

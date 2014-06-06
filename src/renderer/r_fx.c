@@ -49,7 +49,7 @@ void r_create_fx(void) {
 	if (GLEW_KHR_debug) {
 		glObjectLabel(GL_TEXTURE, r_fx_tex, -1, "FX");
 		for (i = 0; i < sizeof(r_fx_VBOs) / sizeof(r_fx_VBOs[0]); ++i)
-			glObjectLabel(GL_TEXTURE, r_fx_VBOs[i], -1, "FX");
+			glObjectLabel(GL_BUFFER, r_fx_VBOs[i], -1, "FX");
 	}
 #endif
 

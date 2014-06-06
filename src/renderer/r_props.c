@@ -58,7 +58,7 @@ void r_create_props(void) {
 	if (GLEW_KHR_debug) {
 		glObjectLabel(GL_TEXTURE, r_prop_tex, -1, "Props");
 		for (i = 0; i < sizeof(r_prop_VBOs) / sizeof(r_prop_VBOs[0]); ++i)
-			glObjectLabel(GL_TEXTURE, r_prop_VBOs[i], -1, "Props");
+			glObjectLabel(GL_BUFFER, r_prop_VBOs[i], -1, "Props");
 	}
 #endif
 

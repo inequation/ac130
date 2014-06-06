@@ -197,7 +197,7 @@ void r_set_heightmap(void) {
 	if (GLEW_KHR_debug) {
 		glObjectLabel(GL_TEXTURE, r_hmap_tex, -1, "Heightmap");
 		for (i = 0; i < sizeof(r_ter_VBOs) / sizeof(r_ter_VBOs[0]); ++i)
-			glObjectLabel(GL_TEXTURE, r_ter_VBOs[i], -1, "Terrain");
+			glObjectLabel(GL_BUFFER, r_ter_VBOs[i], -1, "Terrain");
 	}
 #endif
 

@@ -62,7 +62,7 @@ void r_create_footmobile(void) {
 	if (GLEW_KHR_debug) {
 		glObjectLabel(GL_TEXTURE, r_fmb_tex, -1, "Footmobile");
 		for (i = 0; i < sizeof(r_fmb_VBOs) / sizeof(r_fmb_VBOs[0]); ++i)
-			glObjectLabel(GL_TEXTURE, r_fmb_VBOs[i], -1, "Footmobile");
+			glObjectLabel(GL_BUFFER, r_fmb_VBOs[i], -1, "Footmobile");
 	}
 #endif
 
